@@ -1,7 +1,5 @@
 # Adventure game (school project)
 
-I choose Java for this project since I want to expand my knowledge amongs programing languages. This code is for sure noob code.
-
 <details>
 <summary>Game description (HUN)</summary>
 <br>
