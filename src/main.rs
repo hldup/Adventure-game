@@ -1,6 +1,7 @@
 use std::process::exit;
-
 use rdev::{listen, Event};
+use tui::displayHitBar;
+mod tui;
 
 
 #[derive(Debug)]
@@ -9,10 +10,11 @@ enum  Key {
     Enter,
     Escape,
     Char{
-        value: String, // for example: a p v x | on the keyboard
+        value: String, // for example: a p v x , . / ` | on the keyboard
     },
     Void, // a way to ignore static typing
 }
+
 fn FilterInputStreamForKeys(event:Event) -> Key{
 
     // Filtering out event that are only ButtonPresses
@@ -42,14 +44,15 @@ fn FilterInputStreamForKeys(event:Event) -> Key{
 
 fn main(){
 
+
 let mut username: String = String::new();
 
-// listener
+// listener 
 listen(
     // moving shit
 move |event:Event | -> () {
     let key:Key = FilterInputStreamForKeys(event);
-    // Key::Char{ value: String }
+    // Key::Char{ value: String }   
     match key {
         Key::Char { value: n } =>{
             username.push_str(n.as_str())
@@ -70,12 +73,19 @@ move |event:Event | -> () {
 
         Key::Enter =>{
           // go to next stage
+
+            displayHitBar();
+
             return ()
         }
 
     }
 
 }).expect("asd");
+
+
+
+
 
 
 
