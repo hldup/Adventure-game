@@ -1,7 +1,5 @@
 # Adventure game (school project)
 
-I choose Java for this project since I want to expand my knowledge amongs programing languages. This code is for sure noob code.
-
 <details>
 <summary>Game description (HUN)</summary>
 <br>
@@ -47,8 +45,4 @@ hogy melyik classal kezd
 # Developer on
 ### Developed on:
 - OS: Fedora 37 Workstation Edition
-- openjdk: "17.0.5" 2022-10-18
-- OpenJDK Runtime Environment: Red_Hat-17.0.5.0.8-1.fc37) (build 17.0.5+8
-- OpenJDK 64-Bit Server VM: Red_Hat-17.0.5.0.8-1.fc37) (build 17.0.5+8, mixed mode, sharing
-- javac: 17.0.5
 - Kernel: 6.1.6-200
