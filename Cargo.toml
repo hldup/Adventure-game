@@ -1,0 +1,9 @@
+[package]
+name = "Adventure-game"
+version = "0.0.3"
+edition = "2021"
+
+
+[dependencies]
+termion = "2.0.1" 
+rdev = "0.5.2" # I use this to listen for key presses on the users pc, its cross platform and i was also lazy to program this my self.
