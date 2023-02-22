@@ -1,4 +1,4 @@
-use rdev::{listen, Event, Key};
+use termion::event::Key;
 
 /* #[derive(Debug)]
 pub enum  Key {
@@ -48,52 +48,31 @@ pub enum GameDirectionKey {
     Enter,
 }
 
+    
+    
 
-pub fn FilterInputStreamForArrows(event:Event) -> GameDirectionKey{
+pub fn FilterInputStreamForArrows(key:Key) -> GameDirectionKey{
 
     // Filtering out event that are only ButtonPresses
-    match event.event_type {
+    match key {
 
-        rdev::EventType::KeyPress(n) =>{
+        Key::Left =>   GameDirectionKey::LeftArrow,
+        Key::Char('h') =>   GameDirectionKey::LeftArrow,
 
-            match n {
-                Key::LeftArrow =>   GameDirectionKey::LeftArrow,
-                Key::KeyH =>   GameDirectionKey::LeftArrow,
-
-                Key::RightArrow =>  GameDirectionKey::RightArrow,
-                Key::KeyL =>  GameDirectionKey::RightArrow,
-                
-
-                Key::UpArrow => GameDirectionKey::UpArrow,
-                Key::KeyK => GameDirectionKey::UpArrow,
-
-                Key::DownArrow => GameDirectionKey::DownArrow,
-                Key::KeyJ => GameDirectionKey::DownArrow,
-                
-
-                Key::Space => GameDirectionKey::Enter,
-                 
-                Key =>  GameDirectionKey::Void,
-                
-
-            }
-
-/*             let allowed_keys: Vec<Key> = vec![
-                Key::LeftArrow,  
-                Key::RightArrow, 
-                Key::UpArrow,
-                Key::DownArrow,  
-            ];
-
-            if allowed_keys.contains(&n) {
-                return n;
-            }else{
-                return Key::End;
-            } */
-
-        }
+        Key::Right =>  GameDirectionKey::RightArrow,
+        Key::Char('l') =>  GameDirectionKey::RightArrow,
         
-        // If its not a ButtonPress do nada
-        _ => return GameDirectionKey::Void,
+
+        Key::Up => GameDirectionKey::UpArrow,
+        Key::Char('k') => GameDirectionKey::UpArrow,
+
+        Key::Down => GameDirectionKey::DownArrow,
+        Key::Char('j') => GameDirectionKey::DownArrow,
+        
+
+        Key::Char('\n') => GameDirectionKey::Enter,
+
+        _ => GameDirectionKey::Void,
+
     }
 }

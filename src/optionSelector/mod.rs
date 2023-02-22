@@ -1,5 +1,8 @@
 
-use rdev::{listen, Event};
+use std::io::{stdin, stdout, Write};
+use termion::event::Key;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
 
 use crate::{inputHandler::{FilterInputStreamForArrows, GameDirectionKey}, Character, tui::centerTextForConsole};
 
@@ -51,78 +54,77 @@ print.push_str(centerTextForConsole(termWidth, format!("defense: {}\n", characte
 print!("{}",print);
 print.clear();
 
-// listener 
-listen(
-    // moving shit
-move |event:Event | -> () {
-    let key:GameDirectionKey = FilterInputStreamForArrows(event);
 
 
-    // Key::Char{ value: String }   
-    match key {
+let stdin = stdin();
+let mut stdout = stdout().into_raw_mode().unwrap();
+
+for c in stdin.keys() {
+    write!(
+        stdout,
+        "{}{}",
+        termion::cursor::Goto(1, 1),
+        termion::clear::All
+    )
+    .unwrap();
+
+
+
+    stdout.flush().unwrap();
+
+
+    match FilterInputStreamForArrows(c.expect("Failed to read key")) {
         // do nothing
         GameDirectionKey::DownArrow => { }
         GameDirectionKey::UpArrow => { }
 
 
 
-            
+           
         // selection 
         GameDirectionKey::LeftArrow => {
             if index - 1  > 0  {
                 index -= 1;
-                print!("{}[2J", 27 as char); //clearing console 
+
                 print.push_str(centerTextForConsole(termWidth, format!("{} \n \n", characters[index].name.clone() ) ).as_str()  );
                 print.push_str(centerTextForConsole(termWidth, format!("attack: {} \n", characters[index].attack.clone() ) ).as_str() );
                 print.push_str(centerTextForConsole(termWidth, format!("damage: {}\n", characters[index].health.clone() ) ).as_str() );
                 print.push_str(centerTextForConsole(termWidth, format!("defense: {}\n", characters[index].protection.clone() ) ).as_str());
-                
+             
 
-                print!("{}[2J", 27 as char); //clearing console 
                 print!("{}",print);
                 print.clear();
 
             }else {
                 // do nothing
             }
-
         }
         GameDirectionKey::RightArrow => {
             if index +1 < characters.len()  {
                 index += 1;
-
-                print!("{}[2J", 27 as char); //clearing console 
-                
+             
                 print.push_str(centerTextForConsole(termWidth, format!("{} \n \n", characters[index].name.clone() ) ).as_str()  );
                 print.push_str(centerTextForConsole(termWidth, format!("attack: {} \n", characters[index].attack.clone() ) ).as_str() );
                 print.push_str(centerTextForConsole(termWidth, format!("damage: {}\n", characters[index].health.clone() ) ).as_str() );
                 print.push_str(centerTextForConsole(termWidth, format!("defense: {}\n", characters[index].protection.clone() ) ).as_str() );
-                
-                print!("{}[2J", 27 as char); //clearing console 
+             
                 print!("{}",print); // pritning the charachter data
                 print.clear();// clearing the temp string
-
             }else {
                 // do nothing
             }
         }
-        
+     
             GameDirectionKey::Enter => {
                 returnValue = i8::try_from(index).expect("out of range");
+                break;
             }
 
         GameDirectionKey::Void => {
-
-        }   
-
+        } 
 
     }
-
-}).expect("asd");
-
-
+}
 
 return  returnValue;
-
-
 }
