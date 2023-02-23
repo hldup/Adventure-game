@@ -1,64 +1,57 @@
-use std::process::exit;
-use optionSelector::chooseCharacter;
-use rdev::{listen, Event};
-use tui::{displayHitBar};
+// importus
+use std::vec;
+use game::{Character, Game, PotionInventory};
+use option_selector::chooseCharacter;
+mod game;
 mod tui;
-mod optionSelector;
-mod inputHandler;
-
-pub struct  Character {
-    name: String,
-    attack: i16,
-    health: i16,
-    protection: i16,
-}
-
+mod option_selector;
+mod input_handler;
 
 
 fn main(){
 
+    let mut characters: Vec<Character> = vec![
+        Character{
+            name: String::from("Gyulameleg"),
+            attack: 22,
+            health: 3,
+            protection:43,
+        },
+        Character{
+            name: String::from("gecigranat"),
+            attack: 2,
+            health: 532,
+            protection:4,
+        },
+        Character{
+            name: String::from("teszkarakter"),
+            attack: 2,
+            health: 421,
+            protection:4,
+        },
+        Character{
+            name: String::from("xddd"),
+            attack: 22,
+            health: 34,
+            protection:14,
+        },
+    ];
 
-let u = chooseCharacter(vec![
-    Character{
-        name: String::from("Gyulameleg"),
-        attack: 2,
-        health: 3,
-        protection:4,
-    },
-    Character{
-        name: String::from("gecigranat"),
-        attack: 2,
-        health: 3,
-        protection:4,
-    },
-    Character{
-        name: String::from("teszkarakter"),
-        attack: 2,
-        health: 3,
-        protection:4,
-    },
-    Character{
-        name: String::from("xddd"),
-        attack: 2,
-        health: 3,
-        protection:4,
-    },
+    let choosen_character:usize = chooseCharacter(characters);
 
-]);
-
-
-/* optionSelector::chooser(
-    vec![
-        String::from("option 1"),
-        String::from("option 2")
-    ],
-    String::from("Choose a character")
-);
- */
-
-
-
-
+    let mut jatke: Game = Game{
+        character: characters[choosen_character],
+        round: 0,
+        xp: 0,
+        potions: PotionInventory{
+            small_heal: 0,
+            medium_heal: 0,
+            large_heal: 0,
+            small_strength: 0,
+            large_strength: 0,
+            invisibility: 0,
+        }
+    };
 
 
 }
