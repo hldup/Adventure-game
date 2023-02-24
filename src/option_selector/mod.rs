@@ -33,13 +33,13 @@ pub fn chooser(
 
 
 
-pub fn chooseCharacter(characters: Vec<Character>) -> usize {
+pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> usize {
 
     let (x, y) = termion::terminal_size().unwrap();
     let termWidth = usize::try_from(x).expect("failed to covnert");
 
     let mut returnValue:usize = 0;
-    let mut index: usize = 0;
+    index = 0;
 
 
 

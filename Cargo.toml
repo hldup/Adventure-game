@@ -6,7 +6,15 @@ edition = "2021"
 
 [dependencies]
 termion = "2.0.1" 
-rdev = "0.5.2" # I use this to listen for key presses on the users pc, its cross platform and i was also lazy to program this my self.
 event-listener = "2.5.3" 
 round = "0.1.0"
 rand = "0.8.5"
+
+futures = "0.3.26"
+futures-timer = "3.0.2"
+async-std = "1.12.0"
+tokio = "1.25.0"
+
+[dependencies.crossterm]
+version = "0.26"
+features = ["event-stream"] 

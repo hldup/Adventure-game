@@ -1,17 +1,28 @@
 // importus
-use std::vec;
-use game::{Character, Game, PotionInventory, Enemy, generate_enemy};
+use std::{vec, io::{stdout, Write}};
+use game::{Character, Game, PotionInventory, Enemy};
 use option_selector::chooseCharacter;
-use tui::hitbar;
+use tui::{hitbar};
+
+use crossterm::{
+    event::{DisableMouseCapture},
+    execute,
+    terminal::enable_raw_mode,
+};
+
 mod game;
 mod tui;
 mod option_selector;
 mod input_handler;
 
+fn main() { 
 
-fn main(){
 
-    
+    enable_raw_mode();
+    let mut stdout = stdout();
+    execute!(stdout, DisableMouseCapture);
+
+
     let mut characters: Vec<Character> = vec![
         Character{
             name: String::from("Gyulameleg"),
@@ -39,8 +50,18 @@ fn main(){
         },
     ];
 
+
     // player selecting from characters
-    let choosen_character:usize = chooseCharacter(characters.clone());
+    let mut choosen_character:usize = 0;
+
+    async_std::task::block_on(chooseCharacter(characters.clone(), choosen_character));
+
+
+    // let mut stdout = stdout().into_raw_mode().unwrap();
+    // start_countdown(stdout);
+
+
+    writeln!(stdout, "generating shit game");
 
     let mut jatke: Game = Game{
         character: characters[choosen_character].to_owned(),
@@ -53,24 +74,26 @@ fn main(){
             small_strength: 0,
             large_strength: 0,
             invisibility: 0,
-        }
+        },
+        enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0, damage: 0, xp: 0 }
     };
 
+    jatke.generate_enemy();
 
-    loop{
-   
-        hitbar(vec![1,4]);
+    async_std::task::block_on( hitbar(vec![4,6],jatke));
 
+    // loop {
+    //     let mut enemy: Enemy = generate_enemy(jatke.to_owned());
+
+        
+    // }        
         // generate random enemy 
         // generate random obstacle/ challange
         // - typing challange
         // - hitmarker
         
+
+
         //display challage in the middle of the screen with description
-
-
-        
-    };
-
 
 }
