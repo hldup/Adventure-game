@@ -1,7 +1,8 @@
 // importus
 use std::vec;
-use game::{Character, Game, PotionInventory};
+use game::{Character, Game, PotionInventory, Enemy, generate_enemy};
 use option_selector::chooseCharacter;
+use tui::hitbar;
 mod game;
 mod tui;
 mod option_selector;
@@ -10,6 +11,7 @@ mod input_handler;
 
 fn main(){
 
+    
     let mut characters: Vec<Character> = vec![
         Character{
             name: String::from("Gyulameleg"),
@@ -37,10 +39,11 @@ fn main(){
         },
     ];
 
-    let choosen_character:usize = chooseCharacter(characters);
+    // player selecting from characters
+    let choosen_character:usize = chooseCharacter(characters.clone());
 
     let mut jatke: Game = Game{
-        character: characters[choosen_character],
+        character: characters[choosen_character].to_owned(),
         round: 0,
         xp: 0,
         potions: PotionInventory{
@@ -51,6 +54,22 @@ fn main(){
             large_strength: 0,
             invisibility: 0,
         }
+    };
+
+
+    loop{
+   
+        hitbar(vec![1,4]);
+
+        // generate random enemy 
+        // generate random obstacle/ challange
+        // - typing challange
+        // - hitmarker
+        
+        //display challage in the middle of the screen with description
+
+
+        
     };
 
 

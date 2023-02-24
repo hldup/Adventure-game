@@ -9,3 +9,4 @@ termion = "2.0.1"
 rdev = "0.5.2" # I use this to listen for key presses on the users pc, its cross platform and i was also lazy to program this my self.
 event-listener = "2.5.3" 
 round = "0.1.0"
+rand = "0.8.5"
