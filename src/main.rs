@@ -25,27 +25,27 @@ fn main() {
     let mut characters: Vec<Character> = vec![
         Character{
             name: String::from("Gyulameleg"),
-            attack: 2,
-            health: 3,
-            protection:43,
+            attack: 2.0,
+            health: 3.0,
+            protection:43.0,
         },
         Character{
             name: String::from("gecigranat"),
-            attack: 2,
-            health: 532,
-            protection:4,
+            attack: 2.0,
+            health: 532.0,
+            protection:4.0,
         },
         Character{
             name: String::from("teszkarakter"),
-            attack: 2,
-            health: 421,
-            protection:4,
+            attack: 2.0,
+            health: 421.0,
+            protection:4.0,
         },
         Character{
             name: String::from("xddd"),
-            attack: 2,
-            health: 34,
-            protection:14,
+            attack: 2.0,
+            health: 34.0,
+            protection:14.0,
         },
     ];
 
@@ -64,7 +64,7 @@ fn main() {
     let mut jatke: Game = Game{
         character: characters[choosen_character].to_owned(),
         round: 0,
-        xp: 0,
+        xp: 0.0,
         level:0,
         potions: PotionInventory{
             small_heal: 0,
@@ -74,17 +74,16 @@ fn main() {
             large_strength: 0,
             invisibility: 0,
         },
-        enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0, damage: 0, xp: 0 }
+        enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0.0, damage: 0.0, xp: 0.0 }
     };
     
     // after enemy is defeated generate another ane and announce the name of it & the obstacle
 
-loop {
 
     jatke.generate_enemy();
+
     async_std::task::block_on(jatke.fight_enemy());            
 
-}
 
 
 }

@@ -36,14 +36,14 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
         "{} {} {} {} {} {}", 
 
         termion::cursor::Goto(1,y-4),
-        format!("{} {} {} Health", color::Bg(color::Red), game.character.health, color::Bg(color::Reset)),                
+        format!("{} {} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
         
         termion::cursor::Goto(1,y-3),
-        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.attack, color::Bg(color::Reset)),                
+        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.attack.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-2),
-        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.protection, color::Bg(color::Reset)),                
+        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.protection.round(), color::Bg(color::Reset)),                
 
         ).unwrap();
 
@@ -54,8 +54,8 @@ fn display_enemy(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
 
 
     let enemy_faction: String = format!("Faction {} {:?} {} ", color::Bg(color::LightCyan), game.enemy.faction, color::Bg(color::Reset));
-    let enemy_damage: String = format!("Attack {} {} {} ", color::Bg(color::LightYellow), game.enemy.damage, color::Bg(color::Reset));  
-    let enemy_health: String = format!("Health {} {} {}", color::Bg(color::Red), game.enemy.health, color::Bg(color::Reset));                
+    let enemy_damage: String = format!("Attack {} {} {} ", color::Bg(color::LightYellow), game.enemy.damage.round(), color::Bg(color::Reset));  
+    let enemy_health: String = format!("Health {} {} {}", color::Bg(color::Red), game.enemy.health.round(), color::Bg(color::Reset));                
 
     writeln!( stdout, 
         "{} {} {} {} {} {}", 
@@ -112,10 +112,11 @@ impl Hitbar {
 
 
         loop  {
-            if self.game.enemy.health <= 0{ 
+            if self.game.enemy.health <= 0.0 || self.game.character.health <= 0.0{ 
             
             // defeat message
             // 2s delay
+            
 
                 break
             };

@@ -12,9 +12,6 @@ pub enum GameDirectionKey {
     Enter,
 }
 
-    
-    
-
 pub fn FilterInputStreamForArrows(key:Key) -> GameDirectionKey{
 
     // Filtering out event that are only ButtonPresses
