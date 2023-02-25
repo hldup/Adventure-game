@@ -1,5 +1,5 @@
 
-use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write}};
+use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout, Stdin}};
 use async_std::stream::StreamExt;
 use crossterm::{
     cursor::position,
@@ -16,85 +16,157 @@ use termion::{raw::{IntoRawMode, RawTerminal}, color};
 use crate::game::Game;
 
 
-/// this need improvement cus its retarded
-/// Hitrange: i16-i16, like 2-4 or 1-2. 
-/// How it would look like
-/// 2-4     =[=|]===========
-/// 6-12    =====[=====]=|==
-/// player needs to press enter when his cursor is betweem these ranges
+// TOP BAR
+fn display_level(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
+    writeln!( stdout, 
+        "{} {}", 
 
-pub async fn hitbar(hit_range: Vec<i32> ,game:Game) {
+        termion::cursor::Goto(x/2,3),
+        format!("Level {}", game.level),
+        ).unwrap();
+
+}
+
+
+// LEFT BAR
+fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
+
+
+    writeln!( stdout, 
+        "{} {} {} {} {} {}", 
+
+        termion::cursor::Goto(1,y-4),
+        format!("{} {} {} Health", color::Bg(color::Red), game.character.health, color::Bg(color::Reset)),                
+        
+        termion::cursor::Goto(1,y-3),
+        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.attack, color::Bg(color::Reset)),                
+
+
+        termion::cursor::Goto(1,y-2),
+        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.protection, color::Bg(color::Reset)),                
+
+        ).unwrap();
+
+}
+
+// RIGH BAR
+fn display_enemy(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
+
+
+    let enemy_faction: String = format!("Faction {} {:?} {} ", color::Bg(color::LightCyan), game.enemy.faction, color::Bg(color::Reset));
+    let enemy_damage: String = format!("Attack {} {} {} ", color::Bg(color::LightYellow), game.enemy.damage, color::Bg(color::Reset));  
+    let enemy_health: String = format!("Health {} {} {}", color::Bg(color::Red), game.enemy.health, color::Bg(color::Reset));                
+
+    writeln!( stdout, 
+        "{} {} {} {} {} {}", 
+
+        termion::cursor::Goto(x-13,y-4),
+        enemy_health,
+
+        termion::cursor::Goto(x-13 as u16,y-3),
+        enemy_damage,
+
+        termion::cursor::Goto(x-16,y-2),
+        enemy_faction,
+
+        ).unwrap();
+
+}
+
+
+pub struct  Hitbar{
+    pub reader: EventStream,
+    pub stdout:  RawTerminal<Stdout>,
+    pub game:  Game,
     
-    let mut marker: i32 = 0; // where the hitmarker is 
-    let mut backwards_counter: i32 = 0; // when its positive the marker value decreses
-    let mut print_string:String = String::new(); 
-    let mut reader = EventStream::new();
+    //private
+    print_string: String,
+    marker: i32,
+    backwards_counter: i32,
+    hit_range: Vec<i32>
+}
 
 
-    // console 
-    let mut stdout = stdout().into_raw_mode().unwrap();
-    let (x, y) = termion::terminal_size().unwrap();
-    writeln!( stdout, "{}",  termion::clear::All).unwrap();
-   
-
-        loop{
-
-            let mut delay = Delay::new(Duration::from_millis(500)).fuse();
-            writeln!( stdout, "{}",  color::Fg(color::Reset)).unwrap();
-            let mut event = reader.next().fuse();
-
-
-            writeln!( stdout, 
-                "{} {} {} {} {} {}", 
-
-                termion::cursor::Goto(1,y-4),
-                format!("Health: {} {} {}", color::Bg(color::Red), game.character.health, color::Bg(color::Reset)),                
-                
-                termion::cursor::Goto(1,y-3),
-                format!("Attack: {} {} {}", color::Bg(color::LightYellow), game.character.attack, color::Bg(color::Reset)),                
+impl Hitbar {
+    // i did this just to soly practice "production" coding cus i saw this being used
+    // also now i dont have to define private fields 
+    pub fn new(
+        reader: EventStream,
+        stdout: RawTerminal<Stdout>,
+        game: Game,
+    ) -> Hitbar {
+        Hitbar { 
+            reader: reader, 
+            stdout: stdout, 
+            game: game, 
+            print_string: String::new(),
+            marker: 0,
+            backwards_counter: 0,
+            hit_range: vec![3,6]
+         }
+    }
 
 
-                termion::cursor::Goto(1,y-2),
-                format!("Protection: {} {} {}", color::Bg(color::LightCyan), game.character.protection, color::Bg(color::Reset)),                
-
-                ).unwrap();
+     pub async fn play(&mut self ){
+        let mut event = self.reader.next().fuse();
 
 
-            print_string.clear();
-            if marker == 16 { backwards_counter+= 16 } // if its at the end
-            if marker == 0 { backwards_counter = 0 } // when it arrives at pos 0 again
+        loop  {
+            if self.game.enemy.health <= 0{ 
+            
+            // defeat message
+            // 2s delay
+
+                break
+            };
+             
+            let (x, y) = termion::terminal_size().unwrap();
+
+             // displaying shit in the ui
+             display_stats(&mut self.stdout, self.game.clone(), x,y);
+             display_enemy(&mut self.stdout, self.game.clone(), x, y);
+             display_level(&mut self.stdout, self.game.clone(), x, y);
+
+            // setting color back just in case
+             writeln!( self.stdout, "{}",  color::Fg(color::Reset)).unwrap();
+
+             let mut delay = Delay::new(Duration::from_millis(500)).fuse();
+             let mut event = self.reader.next().fuse();
+
+             self.print_string.clear();
+
+            if self.marker == 16 { self.backwards_counter+= 16 } // if its at the end
+            if self.marker == 0 { self.backwards_counter = 0 } // when it arrives at pos 0 again
 
             for i in 0..16  {   
     
-                if i == marker { print_string.push_str("|"); }
+                if i == self.marker { self.print_string.push_str("|"); }
     
                 else { 
-                    if i == hit_range[0]{
-                    print_string.push_str("[");   
+                    if i == self.hit_range[0]{
+                        self.print_string.push_str("[");   
                     }
                     else{
-                        print_string.push_str("=");
+                        self.print_string.push_str("=");
                     } 
-    
-                    if i == hit_range[1]{
-                        print_string.push_str("]");
+                    if i == self.hit_range[1]{
+                        self.print_string.push_str("]");
                     }else{
-                        print_string.push_str("=");
+                        self.print_string.push_str("=");
                     }
                  }
             
             }
     
-            if backwards_counter > 0 { marker-=1 }
-            else{ marker+= 1 }
+            if self.backwards_counter > 0 { self.marker-=1 }
+            else{ self.marker+= 1 }
     
-            writeln!( stdout, 
+            writeln!( self.stdout, 
                 "{} {}", 
-                termion::cursor::Goto(( (x as usize -print_string.len() ) / 2) as u16 , y/2),
-                print_string,
+                termion::cursor::Goto(( (x as usize - self.print_string.len() ) / 2) as u16 , y/2),
+                self.print_string,
                 ).unwrap();
-
-
+            
             // filtering input for enter  & space and adjusting scores according to it
             select! {
                 _ = delay => {  },
@@ -102,39 +174,48 @@ pub async fn hitbar(hit_range: Vec<i32> ,game:Game) {
                     match maybe_event {
                         Some(Ok(event)) => {
                                 if event == Event::Key( KeyCode::Enter.into() )  {
-                                    
+                                
 
                                     // if player hit between hitrange
-                                    if  hit_range[0] <= marker && marker <= hit_range[1]{
-                                        writeln!( stdout, 
-                                            "{} {} Hit!", 
+                                    if  self.hit_range[0] <= self.marker && self.marker <= self.hit_range[1]{
+                                        writeln!( self.stdout, 
+                                            "{} {} Hit!{}", 
                                             termion::cursor::Goto(3,5),
                                             color::Fg(color::Green),
-                                            ).unwrap();    
-                                    
+                                            color::Fg(color::Reset),
+                                            ).unwrap();
+
+                                            self.game.hit_attack();
+                                            
                                     }else{
                                     // if not, increase speed and take one from the dmg chances
-                                    writeln!( stdout, 
-                                        "{} {}Miss!", 
+                                    writeln!( self.stdout, 
+                                        "{} {}Miss!{}", 
                                         termion::cursor::Goto(3,5),
                                         color::Fg(color::Red),
-                                        ).unwrap();    
+                                        color::Fg(color::Reset),
+                                        ).unwrap();
+
+                                        self.game.missed_attack();
                                     }
-                }                // exit imnplementation
+                                   } // exit imnplementation
                                 if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { break; }        
                             } // end of match ok scene
-
                         Some(Err(e)) => println!("Error: {:?}\r", e),
                         None => break,
                     }
                 }
             };
-;
-
-
-    }
-
+        }
 }
+
+    pub fn calculate_hit_range(&mut self) {
+
+    } 
+    
+}
+
+
 
 
 

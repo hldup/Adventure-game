@@ -2,7 +2,6 @@
 use std::{vec, io::{stdout, Write}};
 use game::{Character, Game, PotionInventory, Enemy};
 use option_selector::chooseCharacter;
-use tui::{hitbar};
 
 use crossterm::{
     event::{DisableMouseCapture},
@@ -26,7 +25,7 @@ fn main() {
     let mut characters: Vec<Character> = vec![
         Character{
             name: String::from("Gyulameleg"),
-            attack: 22,
+            attack: 2,
             health: 3,
             protection:43,
         },
@@ -44,7 +43,7 @@ fn main() {
         },
         Character{
             name: String::from("xddd"),
-            attack: 22,
+            attack: 2,
             health: 34,
             protection:14,
         },
@@ -61,12 +60,12 @@ fn main() {
     // start_countdown(stdout);
 
 
-    writeln!(stdout, "generating shit game");
 
     let mut jatke: Game = Game{
         character: characters[choosen_character].to_owned(),
         round: 0,
         xp: 0,
+        level:0,
         potions: PotionInventory{
             small_heal: 0,
             medium_heal: 0,
@@ -77,23 +76,15 @@ fn main() {
         },
         enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0, damage: 0, xp: 0 }
     };
+    
+    // after enemy is defeated generate another ane and announce the name of it & the obstacle
+
+loop {
 
     jatke.generate_enemy();
+    async_std::task::block_on(jatke.fight_enemy());            
 
-    async_std::task::block_on( hitbar(vec![4,6],jatke));
+}
 
-    // loop {
-    //     let mut enemy: Enemy = generate_enemy(jatke.to_owned());
-
-        
-    // }        
-        // generate random enemy 
-        // generate random obstacle/ challange
-        // - typing challange
-        // - hitmarker
-        
-
-
-        //display challage in the middle of the screen with description
 
 }

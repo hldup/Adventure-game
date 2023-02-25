@@ -1,9 +1,13 @@
 
 // everthing is i128 since the game goes indefinetly and values will rise. therefore some stats will overflow i8-i64
 
-use std::vec;
+use std::{vec, io::{stdout, Write}, };
+use crossterm::event::EventStream;
+use rand::Rng;
+use termion::raw::IntoRawMode;
 
-use rand::Rng; // 0.8.5
+use crate::tui::Hitbar;
+ 
 
 
 #[derive(Debug, Clone)]
@@ -12,19 +16,7 @@ pub struct  Character {
     pub attack: i128,
     pub health: i128,
     pub protection: i128,
-}
-
-
-// pub enum Potions {
-//     SmallHeal { amount: i128 }, // heals 30%
-//     MediumHeal { amount: i128 }, // heals 50%
-//     LargeHeal { amount: i128 }, // heals 70%
-//     SmallStrenght { amount: i128 }, // enpowers next attack by 15%
-//     LargeStrenght { amount: i128 }, // enpowers next attack by 45%
-//     Invisibility { amount: i128 } // gives a 1/2 chance to dodge enemies attack
-// }
-
-#[derive(Debug,Clone)]
+}#[derive(Debug,Clone)]
 pub struct PotionInventory{
     pub small_heal: i128,
     pub medium_heal: i128,
@@ -46,16 +38,23 @@ pub struct Enemy {
     pub health: i128,
     pub damage:  i128,
     pub xp: i128,
+
 }
 // same here, everything i128
 #[derive(Debug,Clone)]
 pub struct Game {
     /// character stats like attack, health and dodge are edited before attacks
     pub character: Character,
+    // current round
     pub round: i128,
+    // overall xp
     pub xp:i128, 
+    // inventory of users potion
     pub potions: PotionInventory,
+    // current enemy
     pub enemy: Enemy,
+    // level (increase by every kill)
+    pub level: i128,
 }
 
 
@@ -88,7 +87,58 @@ impl Game {
     };
 
 }
+
+pub fn increase_level(&mut self){
+    self.level += 1;
 }
+
+pub fn missed_attack(&mut self){
+    self.character.health -= ( self.enemy.damage - (self.enemy.damage * (self.character.protection / 100) ) )
+}
+
+pub fn hit_attack(&mut self){
+    self.enemy.health -= self.character.attack; 
+}
+
+pub async fn fight_enemy(self){
+
+
+// let obstacle = rand::thread_rng().gen_range(0..3);
+let obstacle = 0;
+
+
+match obstacle {
+    // hitmarker
+    0 => {
+
+        let stdout = stdout().into_raw_mode().unwrap();
+        let mut reader = EventStream::new();
+        
+        let  mut hitbar = Hitbar::new(reader,stdout,self);
+        
+
+
+        hitbar.play().await;
+
+    },
+
+    // typing challange
+    1 =>{
+
+    }
+    /// idk
+    2 =>{
+
+    }
+    _ => {
+
+    }
+}
+
+}
+
+}
+
 
 
 
