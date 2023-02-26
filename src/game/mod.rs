@@ -1,5 +1,4 @@
 
-// everthing is i128 since the game goes indefinetly and values will rise. therefore some stats will overflow i8-i64
 
 use std::{vec, io::{stdout, Write, Stdout}, thread, time, };
 use crossterm::event::EventStream;
@@ -17,7 +16,8 @@ pub struct  Character {
     pub health: f64,
     pub protection: f64,
 
-}#[derive(Debug,Clone)]
+}
+#[derive(Debug,Clone)]
 pub struct PotionInventory{
     pub small_heal: i128,
     pub medium_heal: i128,
@@ -26,7 +26,19 @@ pub struct PotionInventory{
     pub large_strength: i128,
     pub invisibility: i128,
 }
-#[derive(Debug, Clone)]
+impl PotionInventory{
+    pub fn new() -> PotionInventory{
+        PotionInventory{
+            small_heal: 0,
+            medium_heal: 0,
+            large_heal: 0,
+            small_strength: 0,
+            large_strength: 0,
+            invisibility: 0,
+        }
+    }
+}
+#[derive(Debug, Clone,Copy)]
 pub enum Faction {
     Skeleton,
     Flesh,
@@ -34,6 +46,7 @@ pub enum Faction {
 }
 #[derive(Debug,Clone)]
 pub struct Enemy {
+    
     pub name: String,
     pub faction: Faction,
     pub health: f64,

@@ -1,14 +1,14 @@
 // importus
-use std::{vec, io::{stdout, Write}};
+use std::{vec, io::stdout};
 use game::{Character, Game, PotionInventory, Enemy};
 use option_selector::chooseCharacter;
-
 use crossterm::{
     event::{DisableMouseCapture},
     execute,
     terminal::enable_raw_mode,
 };
 
+// modules
 mod game;
 mod tui;
 mod option_selector;
@@ -61,29 +61,39 @@ fn main() {
 
 
 
-    let mut jatke: Game = Game{
+    let mut game: Game = Game{
         character: characters[choosen_character].to_owned(),
         round: 0,
         xp: 0.0,
         level:0,
-        potions: PotionInventory{
-            small_heal: 0,
-            medium_heal: 0,
-            large_heal: 0,
-            small_strength: 0,
-            large_strength: 0,
-            invisibility: 0,
-        },
+        potions: PotionInventory::new(),
         enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0.0, damage: 0.0, xp: 0.0 }
     };
     
-    // after enemy is defeated generate another ane and announce the name of it & the obstacle
 
+    // TODO after enemy is defeated generate another ane and announce the name of it & the obstacle
+    loop {
 
-    jatke.generate_enemy();
+        //this function takes ownership of the receiver `self`, which moves `jatke`
+        game.generate_enemy();
+        // announce enemy here
 
-    async_std::task::block_on(jatke.fight_enemy());            
+        //this blocks/halts the whole program, and everyting  inside this function is async
+        async_std::task::block_on( game.fight_enemy() );             
+            
+    }
 
 
 
 }
+
+
+/*
+https://piped.lunar.icu/watch?v=VAo065vRO4Q&t=102
+
+My mother told me
+Some day I wil buy (buy)
+Galley with good oears
+Sail to distans shores!
+
+ */

@@ -83,7 +83,8 @@ pub struct  Hitbar{
     print_string: String,
     marker: i32,
     backwards_counter: i32,
-    hit_range: Vec<i32>
+    hit_range: Vec<i32>,
+    speed: u32,
 }
 
 
@@ -102,7 +103,8 @@ impl Hitbar {
             print_string: String::new(),
             marker: 0,
             backwards_counter: 0,
-            hit_range: vec![3,6]
+            hit_range: vec![3,6],
+            speed: 80,
          }
     }
 
@@ -116,8 +118,7 @@ impl Hitbar {
             
             // defeat message
             // 2s delay
-            
-
+        
                 break
             };
              
@@ -131,7 +132,7 @@ impl Hitbar {
             // setting color back just in case
              writeln!( self.stdout, "{}",  color::Fg(color::Reset)).unwrap();
 
-             let mut delay = Delay::new(Duration::from_millis(500)).fuse();
+             let mut delay = Delay::new(Duration::from_millis(self.speed as u64)).fuse();
              let mut event = self.reader.next().fuse();
 
              self.print_string.clear();
@@ -215,7 +216,15 @@ impl Hitbar {
     } 
     
 }
+/*
+https://piped.video/watch?v=cojoYPRcIJA&t=51
 
+Parlons peu, pardon maman, pardon Dieu (uh-uh)
+Ton gars n'est pas dangereux, il a pas b'soin d'fer, ni d'baveux (coupe, coupe)
+La jalousie, ça rend miséreux, ça dévie les hommes pieux (Glock)
+
+wish i understood french
+ */
 
 
 
