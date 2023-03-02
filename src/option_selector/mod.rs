@@ -1,5 +1,6 @@
 
 use std::{io::{stdin, stdout, Write}, clone};
+use crossterm::{execute, event::DisableMouseCapture};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
@@ -46,7 +47,7 @@ pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> u
     // console 
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
-
+    execute!(stdout, DisableMouseCapture); // reduce bloatware xd
 
     writeln!( stdout, 
         "{} {} {} {} {} {} {} {} {} ", 

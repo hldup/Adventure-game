@@ -71,6 +71,10 @@ fn main() {
     };
     
 
+
+
+
+
     // TODO after enemy is defeated generate another ane and announce the name of it & the obstacle
     loop {
 

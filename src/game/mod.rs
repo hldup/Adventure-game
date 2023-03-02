@@ -2,7 +2,7 @@
 
 use std::{vec, io::{stdout, Write, Stdout}, thread, time, };
 use crossterm::event::EventStream;
-use rand::Rng;
+use rand::{Rng, distributions::Alphanumeric};
 use termion::{raw::{IntoRawMode, RawTerminal}, color};
 
 use crate::tui::Hitbar;
@@ -73,7 +73,7 @@ pub struct Game {
 
 
 impl Game {
-    pub fn generate_enemy(&mut self){
+    pub fn generate_enemy( &mut self ){
 
         let factions: Vec<Faction> = vec![ 
             Faction::Skeleton,
@@ -82,9 +82,12 @@ impl Game {
             ];
         
         self.enemy = Enemy { 
-        
             // TODO cool name generator like WariZkorzok or idk...
-            name: String::from("asd"),
+            name: rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(7)
+            .map(char::from)
+            .collect(),
             faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
         
             health: rand::thread_rng().gen_range(
@@ -170,7 +173,7 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 
 }
 
-pub async fn fight_enemy(self){
+pub async fn fight_enemy(&mut self){
 
 
 // let obstacle = rand::thread_rng().gen_range(0..3);
@@ -187,26 +190,30 @@ let obstacle = 0;
         
             self.announce_enemy(&mut stdout);
 
-            let  mut hitbar = Hitbar::new(reader,stdout,self);
+            let  mut hitbar = Hitbar::new(reader,stdout,self.to_owned());
         
-            hitbar.play().await;
+             hitbar.play().await;
+
+            self.character.health += 1.0;
+            self.character.protection += 1.0;
+            self.character.attack += 1.0;
+            self.level += 1;
 
         },
 
         // typing challange
         1 =>{
-
         }
         /// idk
         2 =>{
-
         }
         _ => {
-
         }
 }
 
 }
+
+
 
 }
 

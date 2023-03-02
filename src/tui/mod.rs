@@ -201,7 +201,7 @@ impl Hitbar {
                                         self.game.missed_attack();
                                     }
                                    } // exit imnplementation
-                                if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { break; }        
+                                if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { panic!("exited from game"); }        
                             } // end of match ok scene
                         Some(Err(e)) => println!("Error: {:?}\r", e),
                         None => break,
