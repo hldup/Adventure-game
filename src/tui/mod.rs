@@ -33,17 +33,22 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
 
 
     writeln!( stdout, 
-        "{} {} {} {} {} {}", 
+        "{} {} {} {} {} {} {} {}", 
 
         termion::cursor::Goto(1,y-4),
         format!("{} {} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
         
         termion::cursor::Goto(1,y-3),
-        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.attack.round(), color::Bg(color::Reset)),                
+        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.weapon.attack.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-2),
-        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.protection.round(), color::Bg(color::Reset)),                
+        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.armour.protection.round(), color::Bg(color::Reset)),                
+
+
+        termion::cursor::Goto(1,y-1),
+        format!("{} {} {} XP", color::Bg(color::LightGreen), game.xp, color::Bg(color::Reset)),                
+
 
         ).unwrap();
 
@@ -109,19 +114,20 @@ impl Hitbar {
     }
 
 
-     pub async fn play(&mut self ){
-        let mut event = self.reader.next().fuse();
-
-
-        loop  {
-            if self.game.enemy.health <= 0.0 || self.game.character.health <= 0.0{ 
-            
-            // defeat message
-            // 2s delay
+     pub async fn play(&mut self ) -> bool{
         
-                break
+        loop  {
+
+            // player go killed
+            if self.game.character.health <= 0.0{
+                return false
+            }
+
+            // enemy killed
+            if self.game.enemy.health <= 0.0 { 
+                return true;
             };
-             
+
             let (x, y) = termion::terminal_size().unwrap();
 
              // displaying shit in the ui
@@ -131,6 +137,7 @@ impl Hitbar {
 
             // setting color back just in case
              writeln!( self.stdout, "{}",  color::Fg(color::Reset)).unwrap();
+
 
              let mut delay = Delay::new(Duration::from_millis(self.speed as u64)).fuse();
              let mut event = self.reader.next().fuse();
@@ -192,7 +199,7 @@ impl Hitbar {
                                     }else{
                                     // if not, increase speed and take one from the dmg chances
                                     writeln!( self.stdout, 
-                                        "{} {}Miss!{}", 
+                                        "{} {} Miss!{}", 
                                         termion::cursor::Goto(3,5),
                                         color::Fg(color::Red),
                                         color::Fg(color::Reset),
@@ -201,19 +208,17 @@ impl Hitbar {
                                         self.game.missed_attack();
                                     }
                                    } // exit imnplementation
-                                if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { panic!("exited from game"); }        
+                                if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { panic!("exited game"); }        
                             } // end of match ok scene
                         Some(Err(e)) => println!("Error: {:?}\r", e),
-                        None => break,
+                        None => return false,
                     }
                 }
             };
         }
 }
 
-    pub fn calculate_hit_range(&mut self) {
 
-    } 
     
 }
 /*

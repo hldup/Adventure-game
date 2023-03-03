@@ -34,20 +34,19 @@ pub fn chooser(
 
 
 
-pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> usize {
+pub async fn chooseCharacter(characters: Vec<Character>,) -> usize {
 
     let (x, y) = termion::terminal_size().unwrap();
     let termWidth = usize::try_from(x).expect("failed to covnert");
 
-    let mut returnValue:usize = 0;
-    index = 0;
 
-
+    let mut index = 0;
 
     // console 
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
     execute!(stdout, DisableMouseCapture); // reduce bloatware xd
+
 
     writeln!( stdout, 
         "{} {} {} {} {} {} {} {} {} ", 
@@ -57,20 +56,18 @@ pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> u
         characters[index].name,
         
         termion::cursor::Goto(1,2),
-        format!("attack: {}", characters[index].attack),
+        format!("attack: {}", characters[index].weapon.attack),
         
         termion::cursor::Goto(1,3),
         format!("health: {}", characters[index].health),
 
         termion::cursor::Goto(1,4),
-        format!("protection: {}", characters[index].protection),
+        format!("protection: {}", characters[index].armour.protection),
         ).unwrap();
 
 
 
-
     for keyPress in stdin.keys() {
-
 
         match FilterInputStreamForArrows(keyPress.expect("Failed to read key")) {
             
@@ -91,13 +88,13 @@ pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> u
                         characters[index].name,
                         
                         termion::cursor::Goto(1,2),
-                        format!("attack: {}", characters[index].attack),
+                        format!("attack: {}", characters[index].weapon.attack),
                         
                         termion::cursor::Goto(1,3),
                         format!("health: {}", characters[index].health),
                 
                         termion::cursor::Goto(1,4),
-                        format!("protection: {}", characters[index].protection),
+                        format!("protection: {}", characters[index].armour.protection),
                         ).unwrap();
 
                     
@@ -110,31 +107,30 @@ pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> u
                 if index +1 < characters.len()  {
                     index += 1;
                     writeln!( stdout, 
-                        "{} {} {} {} {} {} {} {} {} ", 
+                        "{} {} {} {} {} {} {} {} {} {} ", 
                         termion::clear::All,
                 
+                        index,
                         termion::cursor::Goto(1,1),
                         characters[index].name,
                         
                         termion::cursor::Goto(1,2),
-                        format!("attack: {}", characters[index].attack),
+                        format!("attack: {}", characters[index].weapon.attack),
                         
                         termion::cursor::Goto(1,3),
                         format!("health: {}", characters[index].health),
                 
                         termion::cursor::Goto(1,4),
-                        format!("protection: {}", characters[index].protection),
+                        format!("protection: {}", characters[index].weapon.attack),
+
                         ).unwrap();
-
-
                 }else {
                     // do nothing
                 }
             }
         
                 GameDirectionKey::Enter => {
-                    returnValue = index;
-                    break;
+                    return index
                 }
 
             GameDirectionKey::Void => {
@@ -144,5 +140,5 @@ pub async fn chooseCharacter(characters: Vec<Character>,  mut index: usize) -> u
     }
 
     // returning character
-    returnValue
+    index
 }

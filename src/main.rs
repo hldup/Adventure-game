@@ -1,94 +1,86 @@
 // importus
 use std::{vec, io::stdout};
-use game::{Character, Game, PotionInventory, Enemy};
-use option_selector::chooseCharacter;
-use crossterm::{
-    event::{DisableMouseCapture},
-    execute,
-    terminal::enable_raw_mode,
-};
 
-// modules
-mod game;
-mod tui;
-mod option_selector;
-mod input_handler;
+use Adventure_game::game::Character;
+use  Adventure_game::game::items::{Sword,Armour, BonusDamage,BonusProtection};
+use Adventure_game::game::enemy::Faction;
+use Adventure_game::game::Game;
+use Adventure_game::option_selector::chooseCharacter;
+use crossterm::{
+    event::{DisableMouseCapture, EventStream},
+};
+use termion::raw::IntoRawMode;
+
+
 
 fn main() { 
 
-
-    enable_raw_mode();
-    let mut stdout = stdout();
-    execute!(stdout, DisableMouseCapture);
-
-
-    let mut characters: Vec<Character> = vec![
+    let characters: Vec<Character> = vec![
         Character{
             name: String::from("Gyulameleg"),
-            attack: 2.0,
             health: 3.0,
-            protection:43.0,
+
+            weapon:  Sword { 
+                attack: 2.0, 
+                bonus_dmg: BonusDamage {
+                        faction: Faction::Void,
+                        amount: 2.0,
+                    }
+             },
+            armour: Armour { 
+                protection: 2.0, 
+                bonus_protection: BonusProtection { 
+                    faction: Faction::Skeleton, 
+                    amount: 5.0 
+                 }
+              }
         },
         Character{
-            name: String::from("gecigranat"),
-            attack: 2.0,
-            health: 532.0,
-            protection:4.0,
-        },
-        Character{
-            name: String::from("teszkarakter"),
-            attack: 2.0,
-            health: 421.0,
-            protection:4.0,
-        },
-        Character{
-            name: String::from("xddd"),
-            attack: 2.0,
-            health: 34.0,
-            protection:14.0,
+            name: String::from("ziak"),
+            health: 6.0,
+
+            weapon:  Sword { 
+                attack: 1.0, 
+                bonus_dmg: BonusDamage {
+                        faction: Faction::Void,
+                        amount: 5.0,
+                    }
+             },
+            armour: Armour { 
+                protection: 10.0, 
+                bonus_protection: BonusProtection { 
+                    faction: Faction::Skeleton, 
+                    amount: 5.0 
+                 }
+              }
         },
     ];
-
-
+    
     // player selecting from characters
-    let mut choosen_character:usize = 0;
+    let choosen_character:usize = async_std::task::block_on(chooseCharacter( characters.clone() ));
 
-    async_std::task::block_on(chooseCharacter(characters.clone(), choosen_character));
+    let mut game: Game = Game::new(characters[choosen_character].to_owned());
 
-
-    // let mut stdout = stdout().into_raw_mode().unwrap();
-    // start_countdown(stdout);
-
-
-
-    let mut game: Game = Game{
-        character: characters[choosen_character].to_owned(),
-        round: 0,
-        xp: 0.0,
-        level:0,
-        potions: PotionInventory::new(),
-        enemy: Enemy { name: String::from(""), faction: game::Faction::Flesh, health: 0.0, damage: 0.0, xp: 0.0 }
-    };
+    let mut stdout = stdout().into_raw_mode().unwrap();
     
 
-
-
-
-
-    // TODO after enemy is defeated generate another ane and announce the name of it & the obstacle
+    // where the game runs
     loop {
 
-        //this function takes ownership of the receiver `self`, which moves `jatke`
         game.generate_enemy();
-        // announce enemy here
-
+        game.announce_enemy(&mut stdout);
+        
         //this blocks/halts the whole program, and everyting  inside this function is async
-        async_std::task::block_on( game.fight_enemy() );             
-            
+        let outcome =         async_std::task::block_on( game.fight_enemy() );     
+        
+        if !outcome {
+            game.announce_death(&mut stdout);
+            break;
+        }
+
+        game.xp += game.enemy.xp;
+
     }
-
-
-
 }
 
 
