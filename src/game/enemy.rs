@@ -8,6 +8,24 @@ pub enum Faction {
     Skeleton,
     Flesh,
     Void,
+    Zero,
+}
+#[derive(Debug, Clone)]
+pub enum RewardType{
+    Sword{
+        data: Item,
+    },
+
+    Armour{
+        data: Item
+    }
+}
+#[derive(Debug, Clone)]
+pub enum Reward{
+    None,
+    Item{
+        tipus: RewardType
+    }
 }
 #[derive(Debug,Clone)]
 pub struct Enemy {
@@ -17,5 +35,5 @@ pub struct Enemy {
     pub health: f64, // health points
     pub damage:  f64, // damage it deals to player
     pub xp: f64, // how much xp does the enemy give as reward
-    pub reward: Item,
+    pub reward: Reward ,
 }

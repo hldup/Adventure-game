@@ -24,3 +24,8 @@ increase health
 
 2. Make struct for points 
     - function to spend them on potions 
+
+
+
+- Announce enemy
+    Quality of life change -> listen for keyboard inputs then when user preses enter show enemy fight

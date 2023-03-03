@@ -1,27 +1,12 @@
 use super::enemy::Faction;
 
 #[derive(Debug,Clone)]
-pub struct BonusProtection{
-    pub faction: Faction,
-    pub amount: f64
-}
-
-#[derive(Debug,Clone)]
-pub struct  Armour {
-    pub protection: f64,
-    pub bonus_protection: BonusProtection,
-}
-
-#[derive(Debug,Clone)]
-pub struct BonusDamage {
-    pub faction: Faction,
-    pub amount: f64
-}
-
-#[derive(Debug,Clone)]
-pub struct Sword{
-    pub attack: f64,
-    pub bonus_dmg: BonusDamage,
+pub enum Bonus {
+    Zero,
+    Has{
+        faction: Faction,
+        amount: f64
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -39,14 +24,19 @@ pub struct Potion {
 }
 
 
+#[derive(Debug,Clone)]
+pub enum ItemType {
+    Sword,
+    Armour,
+    Zero
+}
+
 
 
 #[derive(Debug,Clone)]
-pub enum Item {
-    Sword {
-        data: Sword,
-    },
-    Armour {
-        data: Armour,
-    },
+pub struct Item {
+    pub tipus: ItemType,
+    pub name: String,
+    pub normal: f64,
+    pub bonus: Bonus,
 }

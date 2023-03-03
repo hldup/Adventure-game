@@ -3,14 +3,14 @@ pub mod items;
 pub mod inventory;
 
 
-use std::{vec, io::{stdout, Write, Stdout}, thread, time, collections::HashMap, };
+use std::{vec, io::{stdout, Write, Stdout}, thread, time, collections::HashMap, num::NonZeroI128, };
 use crossterm::event::EventStream;
 use rand::{Rng, distributions::Alphanumeric};
 use termion::{raw::{IntoRawMode, RawTerminal}, color};
 
 use crate::tui::Hitbar;
 
-use self::{enemy::{Enemy, Faction}, items::{BonusDamage, Item, Armour, Sword}, inventory::Inventory};
+use self::{enemy::{Enemy, Faction, Reward, RewardType}, items::{Item, ItemType, Bonus}, inventory::Inventory};
 
 
 
@@ -18,9 +18,9 @@ use self::{enemy::{Enemy, Faction}, items::{BonusDamage, Item, Armour, Sword}, i
 pub struct  Character {
     pub name: String,
     
-    pub armour: Armour,
+    pub armour: Item,
 
-    pub weapon: Sword,
+    pub weapon: Item,
     
     pub health: f64,
     
@@ -48,6 +48,8 @@ pub struct Game {
 }
 
 impl Game {
+    // creates game object
+    // at init
     pub fn new(chosen: Character) -> Game {
     
         return Game {
@@ -55,7 +57,8 @@ impl Game {
             round: 0,
             xp: 1.0,
             level:0,
-            
+            inventory: Inventory::new(),
+
             enemy: Enemy { 
                 name: String::from("skelly"), 
                 faction: Faction::Skeleton, 
@@ -63,23 +66,21 @@ impl Game {
                 damage: 2.0, 
                 xp: 1.0, 
 
-                reward: Item::Sword { 
-                
-                    data: items::Sword { 
-                        attack: 3.0, 
-                
-                        bonus_dmg: BonusDamage {
-                            faction: Faction::Flesh,
-                            amount: 0.2,
-                
-                        } }
-                 }  
-            },
+                reward: Reward::Item { 
+                    tipus: enemy::RewardType::Sword { 
+                        data: Item { 
+                            tipus: ItemType::Sword,
+                            name: String::from("The only"),
+                            normal: 2.0,
+                            bonus: Bonus::Zero
+                          }
+                     }
+                 },
 
-            inventory: Inventory::new(),
 
-        };
+        }
     }
+}
 
     pub fn generate_enemy( &mut self ){
 
@@ -88,44 +89,127 @@ impl Game {
             Faction::Flesh,
             Faction::Void
             ];
-        
-        self.enemy = Enemy { 
-            // TODO cool name generator like WariZkorzok or idk...
-            name: rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(7)
-            .map(char::from)
-            .collect(),
-            faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
-        
-            health: rand::thread_rng().gen_range(
-                self.character.health 
-                ..
-                self.character.health + (self.character.health * 0.15 ) 
-                ),
-            damage: rand::thread_rng().gen_range(
-                self.character.weapon.attack
-                ..
-                self.character.weapon.attack + (self.character.weapon.attack * 0.15 ) 
-                ),
 
-            // 5u get 10% xp from enemy based on ur xp
-            // so for 100 xp u get 10
-            xp: (self.xp * 0.15), 
-
-
-            reward: Item::Sword { 
-                
-                data: items::Sword { 
-                    attack: 3.0, 
+            let mut enemy = Enemy { 
+                // TODO cool name generator like WariZkorzok or idk...
+                name: rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(7)
+                .map(char::from)
+                .collect(),
+                faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
             
-                    bonus_dmg: BonusDamage {
-                        faction: Faction::Void,
-                        amount: 0.2,
+                health: rand::thread_rng().gen_range(
+                    self.character.health 
+                    ..
+                    self.character.health + (self.character.health * 0.15 ) 
+                    ),
+                damage: rand::thread_rng().gen_range(
+                    self.character.weapon.normal
+                    ..
+                    self.character.weapon.normal + (self.character.weapon.normal * 0.15 ) 
+                    ),
+        
+                // 5u get 10% xp from enemy based on ur xp
+                // so for 100 xp u get 10
+                xp: (self.xp * 0.15), 
+                reward: Reward::None,
+        
+        };
+
+
+    // generating reward 1 in 11
+
+        let number = rand::thread_rng().gen_range(0..7) ;
+        if  number == 4{  
+        match rand::thread_rng().gen_range(1..3) {
+
+                // Generating sword
+            1 => {
+                let mut item = Item { 
+                    tipus: ItemType::Sword,
+
+                    name: rand::thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(7)
+                    .map(char::from)
+                    .collect(),
+
+                    normal: rand::thread_rng().gen_range(
+                        self.character.weapon.normal
+                        ..
+                        self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
+                        ),
+                    
+                    bonus: Bonus::Zero
+                 };
+                    
+                // bonus or no bonus
+                 match rand::thread_rng().gen_range(0..3) {  
+                    2 => {
+                        item.bonus = Bonus::Has {
+                            faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
+                            amount: rand::thread_rng().gen_range(
+                                self.character.weapon.normal
+                                ..
+                                self.character.weapon.normal + (self.character.weapon.normal * 0.35 ) 
+                                ),
+                        }                        
+                    }
+                    _ => {}
+                }
+                 
+                 // Generating bonus damage
+                 enemy.reward = Reward::Item {
+                    tipus: RewardType::Sword { data: item }
+                 }
+            }            
+            2 => {
+
+                let mut item = Item { 
+                    tipus: ItemType::Armour,
+
+                    name: rand::thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(7)
+                    .map(char::from)
+                    .collect(),
+
+                    normal: rand::thread_rng().gen_range(
+                        self.character.weapon.normal
+                        ..
+                        self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
+                        ),
+                    
+                    bonus: Bonus::Zero
+                 };
+                    
+                // bonus or no bonus
+                 match rand::thread_rng().gen_range(0..1) {  
+                    1 => {
+                        item.bonus = Bonus::Has {
+                            faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
+                            amount: rand::thread_rng().gen_range(
+                                self.character.armour.normal
+                                ..
+                                self.character.armour.normal + (self.character.armour.normal * 0.35 ) 
+                                ),
+                        }                        
+                    }
+                    _ => {}
+                }
+                enemy.reward = Reward::Item {
+                    tipus: RewardType::Armour { data: item }
+                 }
+            }
+            _ => {}
             
-                    } }
-             }  
-    };
+        }
+
+    }
+
+
+    self.enemy = enemy;
 
 }
 
@@ -136,12 +220,12 @@ pub fn increase_level(&mut self){
 
 pub fn missed_attack(&mut self){
     
-    self.character.health -= ( self.enemy.damage - (self.enemy.damage * (self.character.armour.protection as f64 / 100.0) ) )
+    self.character.health -= ( self.enemy.damage - (self.enemy.damage * (self.character.armour.normal as f64 / 100.0) ) )
 }
 
 
 pub fn hit_attack(&mut self){
-    self.enemy.health -= self.character.weapon.attack; 
+    self.enemy.health -= self.character.weapon.normal; 
 }
 
 pub fn announce_death(&self, stdout: &mut RawTerminal<Stdout>){

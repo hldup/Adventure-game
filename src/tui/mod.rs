@@ -39,11 +39,11 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
         format!("{} {} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
         
         termion::cursor::Goto(1,y-3),
-        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.weapon.attack.round(), color::Bg(color::Reset)),                
+        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.weapon.normal.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-2),
-        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.armour.protection.round(), color::Bg(color::Reset)),                
+        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.armour.normal.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-1),

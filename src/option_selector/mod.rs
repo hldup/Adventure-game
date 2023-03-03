@@ -56,13 +56,13 @@ pub async fn chooseCharacter(characters: Vec<Character>,) -> usize {
         characters[index].name,
         
         termion::cursor::Goto(1,2),
-        format!("attack: {}", characters[index].weapon.attack),
+        format!("attack: {}", characters[index].weapon.normal),
         
         termion::cursor::Goto(1,3),
         format!("health: {}", characters[index].health),
 
         termion::cursor::Goto(1,4),
-        format!("protection: {}", characters[index].armour.protection),
+        format!("protection: {}", characters[index].armour.normal),
         ).unwrap();
 
 
@@ -88,13 +88,13 @@ pub async fn chooseCharacter(characters: Vec<Character>,) -> usize {
                         characters[index].name,
                         
                         termion::cursor::Goto(1,2),
-                        format!("attack: {}", characters[index].weapon.attack),
+                        format!("attack: {}", characters[index].weapon.normal),
                         
                         termion::cursor::Goto(1,3),
                         format!("health: {}", characters[index].health),
                 
                         termion::cursor::Goto(1,4),
-                        format!("protection: {}", characters[index].armour.protection),
+                        format!("protection: {}", characters[index].armour.normal),
                         ).unwrap();
 
                     
@@ -107,21 +107,20 @@ pub async fn chooseCharacter(characters: Vec<Character>,) -> usize {
                 if index +1 < characters.len()  {
                     index += 1;
                     writeln!( stdout, 
-                        "{} {} {} {} {} {} {} {} {} {} ", 
+                        "{}  {} {} {} {} {} {} {} {} ", 
                         termion::clear::All,
                 
-                        index,
                         termion::cursor::Goto(1,1),
                         characters[index].name,
                         
                         termion::cursor::Goto(1,2),
-                        format!("attack: {}", characters[index].weapon.attack),
+                        format!("attack: {}", characters[index].weapon.normal),
                         
                         termion::cursor::Goto(1,3),
                         format!("health: {}", characters[index].health),
                 
                         termion::cursor::Goto(1,4),
-                        format!("protection: {}", characters[index].weapon.attack),
+                        format!("protection: {}", characters[index].weapon.normal),
 
                         ).unwrap();
                 }else {

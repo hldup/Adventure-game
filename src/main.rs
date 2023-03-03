@@ -1,8 +1,8 @@
 // importus
-use std::{vec, io::stdout};
+use std::{vec, io::stdout, io::Write};
 
-use Adventure_game::game::Character;
-use  Adventure_game::game::items::{Sword,Armour, BonusDamage,BonusProtection};
+use Adventure_game::game::items::Bonus;
+use Adventure_game::game::{Character, items::Item};
 use Adventure_game::game::enemy::Faction;
 use Adventure_game::game::Game;
 use Adventure_game::option_selector::chooseCharacter;
@@ -17,42 +17,38 @@ fn main() {
 
     let characters: Vec<Character> = vec![
         Character{
-            name: String::from("Gyulameleg"),
+            name: String::from("Ziak"),
             health: 3.0,
 
-            weapon:  Sword { 
-                attack: 2.0, 
-                bonus_dmg: BonusDamage {
-                        faction: Faction::Void,
-                        amount: 2.0,
-                    }
+            weapon:  Item { 
+                tipus: Adventure_game::game::items::ItemType::Sword,
+                name: String::from("The lost one"),
+                normal: 2.0,
+                bonus: Bonus::Zero,
              },
-            armour: Armour { 
-                protection: 2.0, 
-                bonus_protection: BonusProtection { 
-                    faction: Faction::Skeleton, 
-                    amount: 5.0 
-                 }
-              }
+            armour: Item { 
+                tipus: Adventure_game::game::items::ItemType::Armour,
+                name: String::from("Chectpiece"),
+                normal: 2.0,
+                bonus: Bonus::Zero,
+             },
         },
         Character{
-            name: String::from("ziak"),
-            health: 6.0,
+            name: String::from("Skinwalker"),
+            health: 3.0,
 
-            weapon:  Sword { 
-                attack: 1.0, 
-                bonus_dmg: BonusDamage {
-                        faction: Faction::Void,
-                        amount: 5.0,
-                    }
+            weapon:  Item { 
+                tipus: Adventure_game::game::items::ItemType::Sword,
+                name: String::from("weed wacker"),
+                normal: 2.0,
+                bonus: Bonus::Zero,
              },
-            armour: Armour { 
-                protection: 10.0, 
-                bonus_protection: BonusProtection { 
-                    faction: Faction::Skeleton, 
-                    amount: 5.0 
-                 }
-              }
+            armour: Item { 
+                tipus: Adventure_game::game::items::ItemType::Armour,
+                name: String::from("Boots"),
+                normal: 2.0,
+                bonus: Bonus::Zero,
+             },
         },
     ];
     
@@ -63,15 +59,16 @@ fn main() {
 
     let mut stdout = stdout().into_raw_mode().unwrap();
     
-
+    
     // where the game runs
     loop {
 
         game.generate_enemy();
-        game.announce_enemy(&mut stdout);
+         game.announce_enemy(&mut stdout);
         
+
         //this blocks/halts the whole program, and everyting  inside this function is async
-        let outcome =         async_std::task::block_on( game.fight_enemy() );     
+        let outcome = async_std::task::block_on( game.fight_enemy() );     
         
         if !outcome {
             game.announce_death(&mut stdout);
