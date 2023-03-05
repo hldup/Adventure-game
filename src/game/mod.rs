@@ -268,8 +268,9 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
     let (x, y) = termion::terminal_size().unwrap();
 
 
+
     writeln!( stdout, 
-        "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {}",
+        "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}",
         termion::clear::All,
         
         termion::cursor::Goto(x/2, y/2 + 1),
@@ -282,20 +283,20 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 
 
         termion::cursor::Goto(x/2, y/2+1),
-        format!("Health: {} {} {}", 
+        format!("Health: {} {:.2} {}", 
             termion::color::Bg(color::Red),
             self.enemy.damage.round(),
             termion::color::Bg(color::Reset) ),
 
 
         termion::cursor::Goto(x/2, y/2+2),
-        format!("Damage: {} {} {}", 
+        format!("Damage: {} {:.2} {}", 
             termion::color::Bg(color::Blue),
             self.enemy.damage.round(),
             termion::color::Bg(color::Reset) ),
 
         termion::cursor::Goto(x/2, y/2+3),
-        format!("XP: {} {} {}", 
+        format!("XP: {} {:.2} {}", 
             termion::color::Bg(color::Blue),
             self.enemy.xp.round(),
             termion::color::Bg(color::Reset) ),
@@ -305,8 +306,12 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
             termion::color::Bg(color::Blue),
             self.enemy.faction,
             termion::color::Bg(color::Reset) ),
-    
 
+            termion::cursor::Goto(x/2, y/2+5),
+            format!("Reward: {} {:?} {}", 
+                termion::color::Bg(color::Green),
+                self.enemy.reward,
+                termion::color::Bg(color::Reset) ),
         ).unwrap();
 
         thread::sleep(time::Duration::from_millis(2500));

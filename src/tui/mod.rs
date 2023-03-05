@@ -1,8 +1,8 @@
 
-use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout, Stdin}};
+use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout}};
 use async_std::stream::StreamExt;
+
 use crossterm::{
-    cursor::position,
     event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -11,9 +11,9 @@ use crossterm::{
 
 use futures::{FutureExt, select};
 use futures_timer::Delay;
-use termion::{raw::{IntoRawMode, RawTerminal}, color};
+use termion::{raw::{IntoRawMode, RawTerminal}, color, input::TermRead};
 
-use crate::game::Game;
+use crate::{game::Game, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
 
 
 // TOP BAR
@@ -36,18 +36,18 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
         "{} {} {} {} {} {} {} {}", 
 
         termion::cursor::Goto(1,y-4),
-        format!("{} {} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
+        format!("{} {:.2} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
         
         termion::cursor::Goto(1,y-3),
-        format!("{} {} {} Attack", color::Bg(color::LightYellow), game.character.weapon.normal.round(), color::Bg(color::Reset)),                
+        format!("{} {:.2} {} Attack", color::Bg(color::LightYellow), game.character.weapon.normal.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-2),
-        format!("{} {} {} Protection", color::Bg(color::LightCyan), game.character.armour.normal.round(), color::Bg(color::Reset)),                
+        format!("{} {:.2} {} Protection", color::Bg(color::LightCyan), game.character.armour.normal.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-1),
-        format!("{} {} {} XP", color::Bg(color::LightGreen), game.xp, color::Bg(color::Reset)),                
+        format!("{} {:.2} {} XP", color::Bg(color::LightGreen), game.xp, color::Bg(color::Reset)),                
 
 
         ).unwrap();
@@ -59,8 +59,8 @@ fn display_enemy(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
 
 
     let enemy_faction: String = format!("Faction {} {:?} {} ", color::Bg(color::LightCyan), game.enemy.faction, color::Bg(color::Reset));
-    let enemy_damage: String = format!("Attack {} {} {} ", color::Bg(color::LightYellow), game.enemy.damage.round(), color::Bg(color::Reset));  
-    let enemy_health: String = format!("Health {} {} {}", color::Bg(color::Red), game.enemy.health.round(), color::Bg(color::Reset));                
+    let enemy_damage: String = format!("Attack {} {:.2} {} ", color::Bg(color::LightYellow), game.enemy.damage.round(), color::Bg(color::Reset));  
+    let enemy_health: String = format!("Health {} {:.2} {}", color::Bg(color::Red), game.enemy.health.round(), color::Bg(color::Reset));                
 
     writeln!( stdout, 
         "{} {} {} {} {} {}", 
@@ -217,10 +217,98 @@ impl Hitbar {
             };
         }
 }
+}
+
+pub async fn get_next_step(){
+
+    let stdin = stdin();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+
+
+    let optionsText: Vec<String> = vec![
+        String::from("Next stage"),
+        String::from("Inventory"),
+        String::from("View stats"),
+        String::from("Quit game")
+    ];
+
+    let mut index: usize = 0;
+
+    let mut printString:String = String::new();
+
+    let (x, y) = termion::terminal_size().unwrap();
+
+
+    for key_press in stdin.keys() {
+
+        match FilterInputStreamForArrows(key_press.expect("Failed to read key")) {
+            
+            GameDirectionKey::UpArrow => {
+                if index < optionsText.len() { index += 1 } 
+
+                write!( stdout, 
+                    "{} {} ",
+                    termion::clear::All,
+                    printString,
+                ).expect("faiuled to read");
+
+             }
+            GameDirectionKey::DownArrow => { 
+                if index != 0 { index -= 1 } 
+
+
+                write!( stdout, 
+                    "{} {} ",
+                    termion::clear::All,
+                    printString,
+                ).expect("faiuled to read");
+
+            }
+
+            
+            
+            GameDirectionKey::LeftArrow => { }
+            GameDirectionKey::RightArrow => { }
+
+            GameDirectionKey::Enter => { break; }
+
+            GameDirectionKey::Void => { }
+
+        }
+        for i in 0..optionsText.len() {
+            if i == index {
+
+                printString.push_str(
+                    format!(
+                        "{} > {} <",
+                        termion::cursor::Goto(x/2,y/2-i as u16),
+                        optionsText[i],
+                    ).as_str()
+                );
+
+            }else {
+                printString.push_str(
+                    format!(
+                        "{} {}",
+                        termion::cursor::Goto(x/2,y/2-i as u16),
+                        optionsText[i],
+                    ).as_str()
+                );
+            }
+
+        }
+    
+
+
+        printString.clear();
+    
+    }
+
+
+}
 
 
     
-}
 /*
 https://piped.video/watch?v=cojoYPRcIJA&t=51
 

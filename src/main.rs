@@ -6,6 +6,7 @@ use Adventure_game::game::{Character, items::Item};
 use Adventure_game::game::enemy::Faction;
 use Adventure_game::game::Game;
 use Adventure_game::option_selector::chooseCharacter;
+use Adventure_game::tui::get_next_step;
 use crossterm::{
     event::{DisableMouseCapture, EventStream},
 };
@@ -62,10 +63,17 @@ fn main() {
     
     // where the game runs
     loop {
+        
+        async_std::task::block_on( get_next_step() );
+        
 
         game.generate_enemy();
          game.announce_enemy(&mut stdout);
-        
+
+        // boss every 10 rounds
+        if game.level % 10 == 0{
+         game.generate_enemy();
+        }
 
         //this blocks/halts the whole program, and everyting  inside this function is async
         let outcome = async_std::task::block_on( game.fight_enemy() );     
