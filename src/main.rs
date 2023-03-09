@@ -1,10 +1,9 @@
 // importus
 use std::{vec, io::stdout, io::Write};
 
-use Adventure_game::game::items::Bonus;
-use Adventure_game::game::{Character, items::Item};
+use Adventure_game::game::items::{Bonus, Armour,Sword};
 use Adventure_game::game::enemy::Faction;
-use Adventure_game::game::Game;
+use Adventure_game::game::{Game, Character};
 use Adventure_game::option_selector::chooseCharacter;
 use Adventure_game::tui::get_next_step;
 use crossterm::{
@@ -18,39 +17,42 @@ fn main() {
 
     let characters: Vec<Character> = vec![
         Character{
-            name: String::from("Ziak"),
-            health: 3.0,
+            name: String::from("Tank"),
+            health: 10.0,
+            maxhealth: 10.0,
 
-            weapon:  Item { 
-                tipus: Adventure_game::game::items::ItemType::Sword,
-                name: String::from("The lost one"),
-                normal: 2.0,
-                bonus: Bonus::Zero,
-             },
-            armour: Item { 
-                tipus: Adventure_game::game::items::ItemType::Armour,
-                name: String::from("Chectpiece"),
-                normal: 2.0,
-                bonus: Bonus::Zero,
-             },
+            weapon:  Sword {
+                name: String::from("Stick"),
+                normal: 1.5,
+                bonus: Bonus::Zero
+            },
+
+            armour: Armour {
+                name: String::from("Wooden armour"),
+                normal: 1.5,
+                bonus: Bonus::Zero
+            }
+
         },
+
         Character{
-            name: String::from("Skinwalker"),
-            health: 3.0,
+            name: String::from("knight"),
+            health: 10.0,
+            maxhealth: 10.0,
 
-            weapon:  Item { 
-                tipus: Adventure_game::game::items::ItemType::Sword,
-                name: String::from("weed wacker"),
-                normal: 2.0,
-                bonus: Bonus::Zero,
-             },
-            armour: Item { 
-                tipus: Adventure_game::game::items::ItemType::Armour,
-                name: String::from("Boots"),
-                normal: 2.0,
-                bonus: Bonus::Zero,
-             },
+            weapon:  Sword {
+                name: String::from("the hollow one"),
+                normal: 1.5,
+                bonus: Bonus::Zero
+            },
+
+            armour: Armour {
+                name: String::from("Cloth piece"),
+                normal: 1.5,
+                bonus: Bonus::Zero
+            }
         },
+
     ];
     
     // player selecting from characters
@@ -65,24 +67,26 @@ fn main() {
     loop {
         
         async_std::task::block_on( get_next_step() );
+    
         
+         game.generate_enemy();
 
-        game.generate_enemy();
          game.announce_enemy(&mut stdout);
 
         // boss every 10 rounds
         if game.level % 10 == 0{
-         game.generate_enemy();
+          game.generate_enemy();
         }
 
         //this blocks/halts the whole program, and everyting  inside this function is async
-        let outcome = async_std::task::block_on( game.fight_enemy() );     
+        let killed: bool = async_std::task::block_on( game.fight_enemy() );     
         
-        if !outcome {
+        if !killed {
             game.announce_death(&mut stdout);
             break;
         }
 
+    
         game.xp += game.enemy.xp;
 
     }

@@ -10,7 +10,7 @@ use termion::{raw::{IntoRawMode, RawTerminal}, color};
 
 use crate::tui::Hitbar;
 
-use self::{enemy::{Enemy, Faction, Reward, RewardType}, items::{Item, ItemType, Bonus}, inventory::Inventory};
+use self::{enemy::{Enemy, Faction, Reward, RewardType}, items::{Bonus, Sword, Armour}, inventory::Inventory};
 
 
 
@@ -18,11 +18,13 @@ use self::{enemy::{Enemy, Faction, Reward, RewardType}, items::{Item, ItemType, 
 pub struct  Character {
     pub name: String,
     
-    pub armour: Item,
+    pub armour: Armour,
 
-    pub weapon: Item,
+    pub weapon: Sword,
     
     pub health: f64,
+
+    pub maxhealth: f64,
     
 }
 
@@ -32,6 +34,7 @@ pub struct  Character {
 pub struct Game {
     /// character stats like attack, health and dodge are edited before attacks
     pub character: Character,
+    
     // current round
     pub round: i128,
     // overall xp
@@ -66,21 +69,13 @@ impl Game {
                 damage: 2.0, 
                 xp: 1.0, 
 
-                reward: Reward::Item { 
-                    tipus: enemy::RewardType::Sword { 
-                        data: Item { 
-                            tipus: ItemType::Sword,
-                            name: String::from("The only"),
-                            normal: 2.0,
-                            bonus: Bonus::Zero
-                          }
-                     }
+                reward: Reward::None
+
                  },
 
 
         }
     }
-}
 
     pub fn generate_enemy( &mut self ){
 
@@ -104,6 +99,7 @@ impl Game {
                     ..
                     self.character.health + (self.character.health * 0.15 ) 
                     ),
+
                 damage: rand::thread_rng().gen_range(
                     self.character.weapon.normal
                     ..
@@ -118,76 +114,68 @@ impl Game {
         };
 
 
-    // generating reward 1 in 11
-
+        // generating reward 1 in 11
         let number = rand::thread_rng().gen_range(0..7) ;
-        if  number == 4{  
+        if  number == 4 {  
+
+        // gnerating from sword armour potion based on rng
         match rand::thread_rng().gen_range(1..3) {
 
-                // Generating sword
+            // Generating sword
             1 => {
-                let mut item = Item { 
-                    tipus: ItemType::Sword,
+                let mut gen_bonus: Bonus = Bonus::Zero;
 
-                    name: rand::thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(7)
-                    .map(char::from)
-                    .collect(),
-
-                    normal: rand::thread_rng().gen_range(
-                        self.character.weapon.normal
-                        ..
-                        self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
-                        ),
-                    
-                    bonus: Bonus::Zero
-                 };
-                    
-                // bonus or no bonus
-                 match rand::thread_rng().gen_range(0..3) {  
+                 // bonus or no bonus
+                match rand::thread_rng().gen_range(0..3) {  
                     2 => {
-                        item.bonus = Bonus::Has {
+                        gen_bonus = Bonus::Has {
                             faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
                             amount: rand::thread_rng().gen_range(
                                 self.character.weapon.normal
                                 ..
                                 self.character.weapon.normal + (self.character.weapon.normal * 0.35 ) 
                                 ),
-                        }                        
-                    }
+                        };
+            
+                    },
                     _ => {}
-                }
-                 
-                 // Generating bonus damage
-                 enemy.reward = Reward::Item {
-                    tipus: RewardType::Sword { data: item }
-                 }
-            }            
+
+                };
+
+                // item object init
+                let mut item = Reward::Item { 
+                    tipus: RewardType::Sword { 
+                        data: Sword { 
+
+                            name: rand::thread_rng()
+                            .sample_iter(&Alphanumeric)
+                            .take(7)
+                            .map(char::from)
+                            .collect(),
+
+                            normal:  rand::thread_rng().gen_range(
+                                self.character.weapon.normal
+                                ..
+                                self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
+                                ),
+                            
+                            // none or bonus based on rng
+                            bonus: gen_bonus, 
+                         }
+                     }
+                };
+
+            }// end of generating SWORD
+
+            // generating Armour
             2 => {
 
-                let mut item = Item { 
-                    tipus: ItemType::Armour,
-
-                    name: rand::thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(7)
-                    .map(char::from)
-                    .collect(),
-
-                    normal: rand::thread_rng().gen_range(
-                        self.character.weapon.normal
-                        ..
-                        self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
-                        ),
-                    
-                    bonus: Bonus::Zero
-                 };
-                    
-                // bonus or no bonus
+                let mut gen_bonus: Bonus = Bonus::Zero;
+                
+                 // bonus or no bonus
                  match rand::thread_rng().gen_range(0..1) {  
                     1 => {
-                        item.bonus = Bonus::Has {
+                        gen_bonus = Bonus::Has {
                             faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
                             amount: rand::thread_rng().gen_range(
                                 self.character.armour.normal
@@ -196,23 +184,42 @@ impl Game {
                                 ),
                         }                        
                     }
+
+                    // ignoring else
                     _ => {}
-                }
-                enemy.reward = Reward::Item {
-                    tipus: RewardType::Armour { data: item }
-                 }
+                };
+
+
+                let mut item = Reward::Item { 
+                    tipus: RewardType::Armour { 
+                        data: Armour { 
+                            
+                            name: rand::thread_rng()
+                            .sample_iter(&Alphanumeric)
+                            .take(7)
+                            .map(char::from)
+                            .collect(),
+
+                            normal: rand::thread_rng().gen_range(
+                                self.character.weapon.normal
+                                ..
+                                self.character.weapon.normal + (self.character.weapon.normal * 0.25 ) 
+                                ),
+                            
+                            bonus: gen_bonus,
+                         }
+                     }
+                 };
             }
             _ => {}
-            
-        }
 
     }
 
 
     self.enemy = enemy;
 
+    }
 }
-
 
 pub fn increase_level(&mut self){
     self.level += 1;
@@ -263,6 +270,7 @@ pub fn announce_death(&self, stdout: &mut RawTerminal<Stdout>){
          ).expect("error printing")
 
 }
+
 pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 
     let (x, y) = termion::terminal_size().unwrap();
@@ -322,15 +330,15 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 pub async fn fight_enemy(&mut self) -> bool{
 
 
-// let obstacle = rand::thread_rng().gen_range(0..3);
-let obstacle = 0;
+    // let obstacle = rand::thread_rng().gen_range(0..3);
+    let obstacle = 0;
 
 
     match obstacle {
         // hitmarker
         0 => {
-            let mut stdout = stdout().into_raw_mode().unwrap();
-            let mut reader = EventStream::new();
+            let stdout = stdout().into_raw_mode().unwrap();
+            let reader = EventStream::new();
 
             let  mut hitbar = Hitbar::new(reader,stdout,self.to_owned());
         
@@ -342,28 +350,28 @@ let obstacle = 0;
 
         // typing challange
         1 =>{
-            false
+            return false
         }
-        /// idk
-        2 =>{
-            false
-        }
-        _ => {
-            false
-        }
+        _ => {}
+        
+        };
+            return false;
 }
-
-}
-
 
 
 pub fn level_up( &mut self ){
     // level up
 }
 
+pub fn enemyKill( &mut self ){
+
+    // if enemy had reward
+    if self.enemy.reward != Reward::None {
+
+    }
 
 }
-
+}
 
 
 

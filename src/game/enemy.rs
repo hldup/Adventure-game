@@ -1,32 +1,38 @@
-use super::items::{Item};
+use super::items::{Sword, Armour, Potion};
 
 
 
 
-#[derive(Debug, Clone,Copy)]
+
+#[derive(Debug, Clone,Copy,PartialEq)]
 pub enum Faction {
     Skeleton,
     Flesh,
     Void,
     Zero,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,PartialEq)]
 pub enum RewardType{
     Sword{
-        data: Item,
+        data: Sword,
     },
 
     Armour{
-        data: Item
+        data: Armour
+    },
+
+    Potion{
+        data: Potion,
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,PartialEq)]
 pub enum Reward{
     None,
     Item{
         tipus: RewardType
     }
 }
+
 #[derive(Debug,Clone)]
 pub struct Enemy {
     
