@@ -41,5 +41,6 @@ pub struct Enemy {
     pub health: f64, // health points
     pub damage:  f64, // damage it deals to player
     pub xp: f64, // how much xp does the enemy give as reward
-    pub reward: Reward ,
+    pub reward: Reward, // sword armour potion
+
 }

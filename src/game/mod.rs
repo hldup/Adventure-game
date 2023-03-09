@@ -353,21 +353,19 @@ pub async fn fight_enemy(&mut self) -> bool{
             return false
         }
         _ => {}
-        
+
         };
             return false;
 }
 
 
-pub fn level_up( &mut self ){
-    // level up
-}
 
-pub fn enemyKill( &mut self ){
+
+pub fn enemy_killed( &mut self ){
 
     // if enemy had reward
     if self.enemy.reward != Reward::None {
-
+        self.inventory.add(self.enemy.reward.clone())
     }
 
 }
