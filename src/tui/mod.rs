@@ -10,7 +10,7 @@ use futures::{FutureExt, select};
 use futures_timer::Delay;
 use termion::{raw::{ RawTerminal}, color::{self, Reset}, input::TermRead};
 
-use crate::{game::{Game, items::{Potion, Sword, Armour}}, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
+use crate::{game::{Game, items::{Potion, Sword, Armour}, Character}, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
 
 
 // TOP BAR
@@ -112,7 +112,7 @@ impl Hitbar {
 
 
      pub async fn play(&mut self ) -> bool{
-        
+        writeln!( self.stdout, "{}",  termion::clear::All, ).unwrap();
         loop  {
 
             // player go killed
@@ -133,8 +133,8 @@ impl Hitbar {
              display_enemy(&mut self.stdout, self.game.clone(), x, y);
              display_level(&mut self.stdout, self.game.clone(), x, y);
 
-            // setting color back just in case
-             writeln!( self.stdout, "{}",  color::Fg(color::Reset)).unwrap();
+            // setting color back and clearing just in case 
+             writeln!( self.stdout, "{}",  color::Fg(color::Reset), ).unwrap();
 
 
              let mut delay = Delay::new(Duration::from_millis( self.speed )).fuse();
@@ -218,125 +218,11 @@ impl Hitbar {
 }
 }
 
-pub fn get_next_step(stdout: &mut RawTerminal<Stdout>) -> i8 {
-
-    
-    let stdin = stdin();
-    let (x, y) = termion::terminal_size().unwrap();
-
-    writeln!(
-        stdout,
-        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-
-        termion::clear::All,
-
-        termion::cursor::Goto(x/2,y/2-5),
-        termion::color::Fg(color::Black),
-        termion::color::Bg(color::LightWhite),
-        String::from("SPACE"),
-
-        termion::color::Fg(Reset),
-        termion::color::Bg(Reset),
-        String::from(" Next stage"),
-
-        termion::cursor::Goto(x/2,y/2-4),
-        termion::color::Fg(color::Black),
-        termion::color::Bg(color::LightWhite),
-        String::from("I"),
-
-        termion::color::Fg(Reset),
-        termion::color::Bg(Reset),
-        String::from(" Inventory"),
-
-
-        termion::cursor::Goto(x/2,y/2-3),
-        termion::color::Fg(color::Black),
-        termion::color::Bg(color::LightWhite),
-        String::from("U"),
-
-        termion::color::Fg(Reset),
-        termion::color::Bg(Reset),
-        String::from(" Upgrade"),
-
-        termion::cursor::Goto(x/2,y/2-2),
-        termion::color::Fg(color::Black),
-        termion::color::Bg(color::LightWhite),
-        String::from("S"),
-
-        termion::color::Fg(Reset),
-        termion::color::Bg(Reset),
-        String::from(" Stats"),
-        
-        termion::cursor::Goto(x/2,y/2-1),
-        termion::color::Fg(color::Black),
-        termion::color::Bg(color::LightWhite),
-        String::from("Q"),
-
-        termion::color::Fg(Reset),
-        termion::color::Bg(Reset),
-        String::from(" Quit"),
-
-
-    ).unwrap();
-
-
-    for key_press in stdin.keys() {
-
-        // this match case is ugly af but ig this is how rust works
-        match key_press {
-
-            Ok(_key) => {
-                match _key {
-                    termion::event::Key::Char( _character ) => {
-                        match _character {
-                        
-                                // space \ next stage 
-                                '\n' => {
-                                    return 1
-                                }
-
-                                //  inventory
-                                'i' =>{
-                                    return 2
-                                }
-                                // upgrade
-                                'u' =>{
-                                    return 3
-                                }
-                                // stats
-                                's' => {
-                                    return 4
-                                }
-                                
-                                // quit
-                                'q' =>{
-                                    
-                                    return 0
-
-                                }
-
-                            _=> {}
-                        }
-                    }
-                    
-                    _=> {}
-                }
-
-            }
-
-
-            Err(_error) =>{}
-        }
-
-    }
-
-    return 1;
-}
 
 
     
 /*
-https://piped.video/watch?v=cojoYPRcIJA&t=51
+https://piped.video/watch?v=cojoYPRcIJA&t=127
 
 Parlons peu, pardon maman, pardon Dieu (uh-uh)
 Ton gars n'est pas dangereux, il a pas b'soin d'fer, ni d'baveux (coupe, coupe)
@@ -372,7 +258,6 @@ pub fn start_countdown(mut stdout: RawTerminal<std::io::Stdout>){
 pub struct Tui<'a> {
     stdout: &'a mut RawTerminal<Stdout>,
     reader: EventStream,
-    game: &'a mut Game,
     stdin:  &'a mut Stdin,
 
     // terminal cols
@@ -385,20 +270,132 @@ impl<'a> Tui<'a> {
     pub fn new(
         stdout: &'a mut RawTerminal<Stdout>,
         reader: EventStream,
-        game: &'a mut Game,
         stdin:  &'a mut Stdin,
         ) -> Tui<'a>{
             let (x, y) = termion::terminal_size().unwrap();
             Tui { 
-                stdout: stdout,
+                stdout:  stdout,
                 reader: reader,
-                game: game,
                 stdin: stdin,
                 x: x,
                 y: y,
              }
     }
+    pub fn get_next_step(&mut self ) -> i8 {
 
+    
+        let stdin = stdin();
+        let (x, y) = termion::terminal_size().unwrap();
+    
+        writeln!(
+            self.stdout,
+            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    
+            termion::clear::All,
+    
+            termion::cursor::Goto(x/2,y/2-5),
+            termion::color::Fg(color::Black),
+            termion::color::Bg(color::LightWhite),
+            String::from("ENTER"),
+    
+            termion::color::Fg(Reset),
+            termion::color::Bg(Reset),
+            String::from(" Next stage"),
+    
+            termion::cursor::Goto(x/2,y/2-4),
+            termion::color::Fg(color::Black),
+            termion::color::Bg(color::LightWhite),
+            String::from("I"),
+    
+            termion::color::Fg(Reset),
+            termion::color::Bg(Reset),
+            String::from(" Inventory"),
+    
+    
+            termion::cursor::Goto(x/2,y/2-3),
+            termion::color::Fg(color::Black),
+            termion::color::Bg(color::LightWhite),
+            String::from("U"),
+    
+            termion::color::Fg(Reset),
+            termion::color::Bg(Reset),
+            String::from(" Upgrade"),
+    
+            termion::cursor::Goto(x/2,y/2-2),
+            termion::color::Fg(color::Black),
+            termion::color::Bg(color::LightWhite),
+            String::from("S"),
+    
+            termion::color::Fg(Reset),
+            termion::color::Bg(Reset),
+            String::from(" Stats"),
+            
+            termion::cursor::Goto(x/2,y/2-1),
+            termion::color::Fg(color::Black),
+            termion::color::Bg(color::LightWhite),
+            String::from("Q"),
+    
+            termion::color::Fg(Reset),
+            termion::color::Bg(Reset),
+            String::from(" Quit"),
+    
+    
+        ).unwrap();
+    
+    
+        for key_press in stdin.keys() {
+    
+            // this match case is ugly af but ig this is how rust works
+            match key_press {
+    
+                Ok(_key) => {
+                    match _key {
+                        termion::event::Key::Char( _character ) => {
+                            match _character {
+                            
+                                    // space \ next stage 
+                                    '\n' => {
+                                        return 1
+                                    }
+    
+                                    //  inventory
+                                    'i' =>{
+                                        return 2
+                                    }
+                                    // upgrade
+                                    'u' =>{
+                                        return 3
+                                    }
+                                    // stats
+                                    's' => {
+                                        return 4
+                                    }
+                                    
+                                    // quit
+                                    'q' =>{
+                                        
+                                        return 0
+    
+                                    }
+    
+                                _=> {}
+                            }
+                        }
+                        
+                        _=> {}
+                    }
+    
+                }
+    
+    
+                Err(_error) =>{}
+            }
+    
+        }
+    
+        return 1;
+    }
+    
 
 
  // the inventory is dynamic based on the users console
@@ -406,14 +403,14 @@ impl<'a> Tui<'a> {
  // some spacing between the items and on the right it shows its stats
  // 3 tabs SWORDS ARMOUR POTIONS
  // user can EQUIP DEQUIP DELETE 
-pub async fn  show_inventory( &mut self){
+pub async fn  inventory( &mut self,  game: &mut Game){
 
    
    let mut gui: GuiInventory = GuiInventory { 
     index: 0, 
-    potions: self.game.inventory.potions.clone(), 
-    swords: self.game.inventory.swords.clone(), 
-    armours: self.game.inventory.armours.clone(),
+    potions: game.inventory.potions.clone(), 
+    swords: game.inventory.swords.clone(), 
+    armours: game.inventory.armours.clone(),
     stdout: self.stdout,
     x: self.x,
     y: self.y,
@@ -442,9 +439,13 @@ pub async fn  show_inventory( &mut self){
                     }
 
                     termion::event::Key::Down => {
-                        panic!("exit")
+                        
                     }
                     
+                    // exiting
+                    termion::event::Key::Backspace => { break}
+                    termion::event::Key::Esc => { break}
+
                     _=> {}
                 }
 
@@ -454,7 +455,7 @@ pub async fn  show_inventory( &mut self){
             Err(_error) =>{}
         }
     
-    for (key, value) in self.game.inventory.swords.clone() {
+    for (key, value) in game.inventory.swords.clone() {
 
 
     }
@@ -463,6 +464,60 @@ pub async fn  show_inventory( &mut self){
 
 }
 
+
+pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
+
+    let mut index:usize = 0;
+
+    writeln!( self.stdout, 
+        "{} {} {} {} {} {} {} {} {} ", 
+        termion::clear::All,
+
+        termion::cursor::Goto(self.x/2,self.y-5),
+        chars[index].name,
+        //  TODO complete the listing
+        // name: asd
+        // health
+        // weapon:
+        // Attack: 3, Bonus: Void +3 dmg
+        // armor
+        // protection: 4 Bonus:none,
+        //
+        
+        ).unwrap();
+
+
+    for key_press in self.stdin.keys() {
+
+        // this match case is ugly af but ig this is how rust works
+        match key_press {
+            Ok(_key) => {
+                match _key {
+
+                    termion::event::Key::Left => {
+                        if index -1 >= 0 { index -= 1 }
+
+                    }
+
+                    termion::event::Key::Right => {
+                        if index +1 <= chars.len() { index += 1 }
+
+
+                    }
+                    
+                    //enter
+                    termion::event::Key::Char('\n') =>{
+                        break
+                    }
+                    _=> {}
+                }
+            }
+            Err(_error) => {}
+        }
+    }
+
+    return index
+}
 }
 
 struct GuiInventory<'a> {

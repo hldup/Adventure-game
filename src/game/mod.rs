@@ -76,7 +76,10 @@ impl Game {
 
         }
     }
-
+    pub fn borrow_data( &mut self ) -> &mut Game {
+        return  self
+    }
+    
     pub fn generate_enemy( &mut self ){
 
         let factions: Vec<Faction> = vec![ 

@@ -6,7 +6,7 @@ use std::{vec, io::stdout};
 use Adventure_game::game::items::{Bonus, Armour,Sword};
 use Adventure_game::game::{Game, Character};
 use Adventure_game::option_selector::chooseCharacter;
-use Adventure_game::tui::{get_next_step, Tui};
+use Adventure_game::tui::{Tui};
 use crossterm::{
     event::{DisableMouseCapture, EventStream},
 };
@@ -53,11 +53,32 @@ fn main() {
                 bonus: Bonus::Zero
             }
         },
+        Character{
+            name: String::from("mage"),
+            health: 1.5,
+            maxhealth: 1.5,
+
+            weapon:  Sword {
+                name: String::from("broken ward"),
+                normal: 9.5,
+                bonus: Bonus::Zero
+            },
+
+            armour: Armour {
+                name: String::from("Cloth piece"),
+                normal: 0.5,
+                bonus: Bonus::Has { 
+                    faction: Adventure_game::game::enemy::Faction::Void, 
+                    amount: 4.0
+                 }
+            }
+        },
 
     ];
     
     // player selecting from characters
     let choosen_character:usize = async_std::task::block_on(chooseCharacter( characters.clone() ));
+
 
     let mut game: Game = Game::new(characters[choosen_character].to_owned());
 
@@ -67,21 +88,15 @@ fn main() {
     let mut stdin = stdin();
 
     let mut terminal: Tui = Tui::new(
-         &mut stdout ,
-         reader,
-        &mut game,
+        &mut stdout ,
+        reader,
         &mut stdin
         );
-    
-
-    
-    async_std::task::block_on( terminal.show_inventory() );
-    return;
 
     // where the game runs
     loop {
         
-        match get_next_step(&mut stdout) {
+        match terminal.get_next_step() {
             
             // fight enemy
             1 => {
@@ -93,7 +108,8 @@ fn main() {
                 }
 
                 // TODO: block/async ] also quality of life: user can skip
-                game.announce_enemy(&mut stdout);
+                // TODO migrate from game to tui
+                // game.announce_enemy(&mut stdout);
                 
                 let killed: bool = async_std::task::block_on( game.fight_enemy() );     
 
@@ -108,6 +124,7 @@ fn main() {
 
             // inventory
             2 => {
+                async_std::task::block_on( terminal.inventory( &mut game ) );
 
             }
             
@@ -115,7 +132,9 @@ fn main() {
             4 => {}
 
             
-            0 => { panic!("quit") }
+            0 => { 
+                break;
+             }
             _=> {}
         }
 
