@@ -1,11 +1,11 @@
+use core::panic;
 // importus
-use std::{vec, io::stdout, io::Write};
+use std::{vec, io::stdout};
 
 use Adventure_game::game::items::{Bonus, Armour,Sword};
-use Adventure_game::game::enemy::Faction;
 use Adventure_game::game::{Game, Character};
 use Adventure_game::option_selector::chooseCharacter;
-use Adventure_game::tui::get_next_step;
+use Adventure_game::tui::{get_next_step, Tui};
 use crossterm::{
     event::{DisableMouseCapture, EventStream},
 };
@@ -62,32 +62,59 @@ fn main() {
 
     let mut stdout = stdout().into_raw_mode().unwrap();
     
+    let reader = EventStream::new();
+
+    let mut terminal: Tui = Tui::new(
+         &mut stdout ,
+         reader,
+            &mut game
+        );
     
     // where the game runs
     loop {
         
-        async_std::task::block_on( get_next_step() );
-    
-        
-         game.generate_enemy();
+        match get_next_step(&mut stdout) {
+            
+            // fight enemy
+            1 => {
+                game.generate_enemy();
 
-         game.announce_enemy(&mut stdout);
+                // boss every 10 rounds
+                if game.level % 10 == 0{
+                    game.generate_enemy();
+                }
+                game.announce_enemy(&mut stdout);
+                let killed: bool = async_std::task::block_on( game.fight_enemy() );     
 
-        // boss every 10 rounds
-        if game.level % 10 == 0{
-          game.generate_enemy();
+                if !killed {
+                    game.announce_death(&mut stdout);
+                    break;
+                }
+                
+                game.enemy_killed();
+                
+
+            }
+
+            // inventory
+            2 => {
+
+            }
+            
+            3 => {}
+            4 => {}
+
+            
+            0 => { panic!("quit") }
+            _=> {}
         }
+
+
+
 
         //this blocks/halts the whole program, and everyting  inside this function is async
-        let killed: bool = async_std::task::block_on( game.fight_enemy() );     
         
-        if !killed {
-            game.announce_death(&mut stdout);
-            break;
-        }
 
-    
-        game.xp += game.enemy.xp;
 
     }
 }

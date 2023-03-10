@@ -11,7 +11,7 @@ use crossterm::{
 
 use futures::{FutureExt, select};
 use futures_timer::Delay;
-use termion::{raw::{IntoRawMode, RawTerminal}, color, input::TermRead};
+use termion::{raw::{IntoRawMode, RawTerminal}, color::{self, Reset}, input::TermRead};
 
 use crate::{game::Game, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
 
@@ -89,7 +89,7 @@ pub struct  Hitbar{
     marker: i32,
     backwards_counter: i32,
     hit_range: Vec<i32>,
-    speed: u32,
+    speed: u64,
 }
 
 
@@ -128,6 +128,7 @@ impl Hitbar {
                 return true;
             };
 
+
             let (x, y) = termion::terminal_size().unwrap();
 
              // displaying shit in the ui
@@ -139,13 +140,14 @@ impl Hitbar {
              writeln!( self.stdout, "{}",  color::Fg(color::Reset)).unwrap();
 
 
-             let mut delay = Delay::new(Duration::from_millis(self.speed as u64)).fuse();
+             let mut delay = Delay::new(Duration::from_millis( self.speed )).fuse();
              let mut event = self.reader.next().fuse();
 
              self.print_string.clear();
 
             if self.marker == 16 { self.backwards_counter+= 16 } // if its at the end
             if self.marker == 0 { self.backwards_counter = 0 } // when it arrives at pos 0 again
+
 
             for i in 0..16  {   
     
@@ -219,92 +221,119 @@ impl Hitbar {
 }
 }
 
-pub async fn get_next_step(){
+pub fn get_next_step(stdout: &mut RawTerminal<Stdout>) -> i8 {
 
+    
     let stdin = stdin();
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
-
-    let optionsText: Vec<String> = vec![
-        String::from("Next stage"),
-        String::from("Inventory"),
-        String::from("View stats"),
-        String::from("Quit game")
-    ];
-
-    let mut index: usize = 0;
-
-    let mut printString:String = String::new();
-
     let (x, y) = termion::terminal_size().unwrap();
+
+    writeln!(
+        stdout,
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+
+        termion::clear::All,
+
+        termion::cursor::Goto(x/2,y/2-5),
+        termion::color::Fg(color::Black),
+        termion::color::Bg(color::LightWhite),
+        String::from("SPACE"),
+
+        termion::color::Fg(Reset),
+        termion::color::Bg(Reset),
+        String::from(" Next stage"),
+
+        termion::cursor::Goto(x/2,y/2-4),
+        termion::color::Fg(color::Black),
+        termion::color::Bg(color::LightWhite),
+        String::from("I"),
+
+        termion::color::Fg(Reset),
+        termion::color::Bg(Reset),
+        String::from(" Inventory"),
+
+
+        termion::cursor::Goto(x/2,y/2-3),
+        termion::color::Fg(color::Black),
+        termion::color::Bg(color::LightWhite),
+        String::from("U"),
+
+        termion::color::Fg(Reset),
+        termion::color::Bg(Reset),
+        String::from(" Upgrade"),
+
+        termion::cursor::Goto(x/2,y/2-2),
+        termion::color::Fg(color::Black),
+        termion::color::Bg(color::LightWhite),
+        String::from("S"),
+
+        termion::color::Fg(Reset),
+        termion::color::Bg(Reset),
+        String::from(" Stats"),
+        
+        termion::cursor::Goto(x/2,y/2-1),
+        termion::color::Fg(color::Black),
+        termion::color::Bg(color::LightWhite),
+        String::from("Q"),
+
+        termion::color::Fg(Reset),
+        termion::color::Bg(Reset),
+        String::from(" Quit"),
+
+
+    ).unwrap();
 
 
     for key_press in stdin.keys() {
 
-        match FilterInputStreamForArrows(key_press.expect("Failed to read key")) {
-            
-            GameDirectionKey::UpArrow => {
-                if index < optionsText.len() { index += 1 } 
+        // this match case is ugly af but ig this is how rust works
+        match key_press {
 
-                write!( stdout, 
-                    "{} {} ",
-                    termion::clear::All,
-                    printString,
-                ).expect("faiuled to read");
+            Ok(_key) => {
+                match _key {
+                    termion::event::Key::Char( _character ) => {
+                        match _character {
+                        
+                                // space \ next stage 
+                                '\n' => {
+                                    return 1
+                                }
 
-             }
-            GameDirectionKey::DownArrow => { 
-                if index != 0 { index -= 1 } 
+                                //  inventory
+                                'i' =>{
+                                    return 2
+                                }
+                                // upgrade
+                                'u' =>{
+                                    return 3
+                                }
+                                // stats
+                                's' => {
+                                    return 4
+                                }
+                                
+                                // quit
+                                'q' =>{
+                                    
+                                    return 0
 
+                                }
 
-                write!( stdout, 
-                    "{} {} ",
-                    termion::clear::All,
-                    printString,
-                ).expect("faiuled to read");
+                            _=> {}
+                        }
+                    }
+                    
+                    _=> {}
+                }
 
             }
 
-            
-            
-            GameDirectionKey::LeftArrow => { }
-            GameDirectionKey::RightArrow => { }
 
-            GameDirectionKey::Enter => { break; }
-
-            GameDirectionKey::Void => { }
-
+            Err(_error) =>{}
         }
-        for i in 0..optionsText.len() {
-            if i == index {
 
-                printString.push_str(
-                    format!(
-                        "{} > {} <",
-                        termion::cursor::Goto(x/2,y/2-i as u16),
-                        optionsText[i],
-                    ).as_str()
-                );
-
-            }else {
-                printString.push_str(
-                    format!(
-                        "{} {}",
-                        termion::cursor::Goto(x/2,y/2-i as u16),
-                        optionsText[i],
-                    ).as_str()
-                );
-            }
-
-        }
-    
-
-
-        printString.clear();
-    
     }
 
-
+    return 1;
 }
 
 
@@ -341,3 +370,28 @@ pub fn start_countdown(mut stdout: RawTerminal<std::io::Stdout>){
 
 }
 
+
+
+pub struct Tui<'a> {
+    stdout: &'a mut RawTerminal<Stdout>,
+    reader: EventStream,
+    game: &'a mut Game,
+
+}
+
+impl<'a> Tui<'a> {
+
+    pub fn new(
+        stdout: &'a mut RawTerminal<Stdout>,
+        reader: EventStream,
+        game: &'a mut Game,
+        ) -> Tui<'a>{
+            Tui { 
+                stdout: stdout,
+                reader: reader,
+                game: game,
+             }
+    }
+
+
+}

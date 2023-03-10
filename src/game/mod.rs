@@ -143,7 +143,7 @@ impl Game {
                 };
 
                 // item object init
-                let mut item = Reward::Item { 
+                self.enemy.reward = Reward::Item { 
                     tipus: RewardType::Sword { 
                         data: Sword { 
 
@@ -190,7 +190,7 @@ impl Game {
                 };
 
 
-                let mut item = Reward::Item { 
+                self.enemy.reward = Reward::Item { 
                     tipus: RewardType::Armour { 
                         data: Armour { 
                             
@@ -341,11 +341,8 @@ pub async fn fight_enemy(&mut self) -> bool{
             let reader = EventStream::new();
 
             let  mut hitbar = Hitbar::new(reader,stdout,self.to_owned());
-        
-            self.increase_level();
-
+            
             return hitbar.play().await;
-
         },
 
         // typing challange
@@ -365,8 +362,12 @@ pub fn enemy_killed( &mut self ){
 
     // if enemy had reward
     if self.enemy.reward != Reward::None {
-        self.inventory.add(self.enemy.reward.clone())
+        self.inventory.add( self.enemy.reward.clone() )
     }
+
+    // adding xp and increasing lvl
+    self.increase_level();
+    self.xp += self.enemy.xp;
 
 }
 }
