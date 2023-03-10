@@ -1,4 +1,5 @@
 use core::panic;
+use std::io::stdin;
 // importus
 use std::{vec, io::stdout};
 
@@ -29,7 +30,7 @@ fn main() {
 
             armour: Armour {
                 name: String::from("Wooden armour"),
-                normal: 1.5,
+                normal: 5.5,
                 bonus: Bonus::Zero
             }
 
@@ -37,18 +38,18 @@ fn main() {
 
         Character{
             name: String::from("knight"),
-            health: 10.0,
-            maxhealth: 10.0,
+            health: 5.0,
+            maxhealth: 5.0,
 
             weapon:  Sword {
                 name: String::from("the hollow one"),
-                normal: 1.5,
+                normal: 4.5,
                 bonus: Bonus::Zero
             },
 
             armour: Armour {
                 name: String::from("Cloth piece"),
-                normal: 1.5,
+                normal: 2.3,
                 bonus: Bonus::Zero
             }
         },
@@ -63,13 +64,20 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
     
     let reader = EventStream::new();
+    let mut stdin = stdin();
 
     let mut terminal: Tui = Tui::new(
          &mut stdout ,
          reader,
-            &mut game
+        &mut game,
+        &mut stdin
         );
     
+
+    
+    async_std::task::block_on( terminal.show_inventory() );
+    return;
+
     // where the game runs
     loop {
         
@@ -83,7 +91,10 @@ fn main() {
                 if game.level % 10 == 0{
                     game.generate_enemy();
                 }
+
+                // TODO: block/async ] also quality of life: user can skip
                 game.announce_enemy(&mut stdout);
+                
                 let killed: bool = async_std::task::block_on( game.fight_enemy() );     
 
                 if !killed {
@@ -92,7 +103,6 @@ fn main() {
                 }
                 
                 game.enemy_killed();
-                
 
             }
 

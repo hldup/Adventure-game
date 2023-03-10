@@ -1,19 +1,16 @@
 
-use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout}};
+use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout, SeekFrom, Stdin}, collections::HashMap};
 use async_std::stream::StreamExt;
 
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode},
-    Result,
+    event::{ Event, EventStream, KeyCode},
 };
 
 use futures::{FutureExt, select};
 use futures_timer::Delay;
-use termion::{raw::{IntoRawMode, RawTerminal}, color::{self, Reset}, input::TermRead};
+use termion::{raw::{ RawTerminal}, color::{self, Reset}, input::TermRead};
 
-use crate::{game::Game, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
+use crate::{game::{Game, items::{Potion, Sword, Armour}}, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
 
 
 // TOP BAR
@@ -376,7 +373,11 @@ pub struct Tui<'a> {
     stdout: &'a mut RawTerminal<Stdout>,
     reader: EventStream,
     game: &'a mut Game,
+    stdin:  &'a mut Stdin,
 
+    // terminal cols
+    x: u16,
+    y:u16
 }
 
 impl<'a> Tui<'a> {
@@ -385,13 +386,163 @@ impl<'a> Tui<'a> {
         stdout: &'a mut RawTerminal<Stdout>,
         reader: EventStream,
         game: &'a mut Game,
+        stdin:  &'a mut Stdin,
         ) -> Tui<'a>{
+            let (x, y) = termion::terminal_size().unwrap();
             Tui { 
                 stdout: stdout,
                 reader: reader,
                 game: game,
+                stdin: stdin,
+                x: x,
+                y: y,
              }
     }
 
 
+
+ // the inventory is dynamic based on the users console
+ // made up of x by y rows
+ // some spacing between the items and on the right it shows its stats
+ // 3 tabs SWORDS ARMOUR POTIONS
+ // user can EQUIP DEQUIP DELETE 
+pub async fn  show_inventory( &mut self){
+
+   
+   let mut gui: GuiInventory = GuiInventory { 
+    index: 0, 
+    potions: self.game.inventory.potions.clone(), 
+    swords: self.game.inventory.swords.clone(), 
+    armours: self.game.inventory.armours.clone(),
+    stdout: self.stdout,
+    x: self.x,
+    y: self.y,
+
+    };
+
+    gui.render();
+
+    for key_press in self.stdin.keys() {
+
+        // this match case is ugly af but ig this is how rust works
+        match key_press {
+
+            Ok(_key) => {
+                match _key {
+
+                    termion::event::Key::Left => {
+                        
+                    }
+
+                    termion::event::Key::Right => {
+
+                    }
+                    termion::event::Key::Up => {
+
+                    }
+
+                    termion::event::Key::Down => {
+                        panic!("exit")
+                    }
+                    
+                    _=> {}
+                }
+
+            }
+
+
+            Err(_error) =>{}
+        }
+    
+    for (key, value) in self.game.inventory.swords.clone() {
+
+
+    }
+
+     }  
+
+}
+
+}
+
+struct GuiInventory<'a> {
+
+    index: i8,
+
+    potions: HashMap<i128,Potion>,
+    swords: HashMap<i128,Sword>,
+    armours: HashMap<i128,Armour>,
+
+    stdout: &'a mut RawTerminal<Stdout>,
+    
+    x: u16,
+    y: u16,
+
+}
+
+
+impl<'a> GuiInventory<'a> {
+
+    pub fn render( &mut self ){
+
+        let mut print_string: String = String::new();
+
+
+        // 5x5 grid  | illustration 
+        //     /////
+        //     \\2//
+        //     /////
+
+        // grid widht height + 1 margin / 6
+ 
+        let mut current_row_x = 0;
+        let mut current_row_y = 0;
+
+        for i in 0..90{
+
+            if current_row_x * 5 + 6 < self.x{
+            print_string.push_str(
+                format!("{}{}",
+                termion::cursor::Goto
+                (
+                    //x
+                    current_row_x * 5 + 5,
+                    //y
+                    current_row_y * 5 + 5,
+
+                ), i
+            ).as_str()
+            );
+            current_row_x += 1;
+
+            } else {
+
+            current_row_y += 1;
+            current_row_x = 0;
+            
+            print_string.push_str(
+                format!("{}{}",
+                termion::cursor::Goto
+                (
+                    //x
+                    current_row_x * 5 + 6,
+                    //y
+                    current_row_y * 6,
+
+                ), i
+                ).as_str()
+            );
+
+            }
+        }
+
+        writeln!(self.stdout, "{}{}", 
+        termion::clear::All,
+        print_string).unwrap();
+
+    }
+    
+    pub fn set_index( &mut self, index: i8){
+        self.index = index
+    }
 }

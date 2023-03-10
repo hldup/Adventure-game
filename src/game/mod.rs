@@ -85,14 +85,14 @@ impl Game {
             Faction::Void
             ];
 
-            let mut enemy = Enemy { 
-                // TODO cool name generator like WariZkorzok or idk...
+            self.enemy = Enemy { 
+                // TODO cool name generator
                 name: rand::thread_rng()
                 .sample_iter(&Alphanumeric)
                 .take(7)
                 .map(char::from)
                 .collect(),
-                faction: factions[rand::thread_rng().gen_range(0..factions.len())].to_owned(),
+                faction: factions[rand::thread_rng().gen_range( 0..factions.len() )].to_owned(),
             
                 health: rand::thread_rng().gen_range(
                     self.character.health 
@@ -214,9 +214,6 @@ impl Game {
             _ => {}
 
     }
-
-
-    self.enemy = enemy;
 
     }
 }
