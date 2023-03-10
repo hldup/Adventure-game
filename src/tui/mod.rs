@@ -414,7 +414,6 @@ pub async fn  inventory( &mut self,  game: &mut Game){
     stdout: self.stdout,
     x: self.x,
     y: self.y,
-
     };
 
     gui.render();
@@ -445,6 +444,8 @@ pub async fn  inventory( &mut self,  game: &mut Game){
                     // exiting
                     termion::event::Key::Backspace => { break}
                     termion::event::Key::Esc => { break}
+                    termion::event::Key::Char('q') => { break}
+
 
                     _=> {}
                 }
@@ -465,16 +466,48 @@ pub async fn  inventory( &mut self,  game: &mut Game){
 }
 
 
+
 pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
 
     let mut index:usize = 0;
 
+
     writeln!( self.stdout, 
-        "{} {} {} {} {} {} {} {} {} ", 
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", 
         termion::clear::All,
 
-        termion::cursor::Goto(self.x/2,self.y-5),
+        termion::cursor::Goto(self.x/2-10,self.y/2),
+        termion::color::Fg(color::LightBlack),
+        termion::color::Bg(color::White),
         chars[index].name,
+        termion::color::Bg(color::Reset),
+        termion::color::Fg(color::Reset),
+
+        termion::cursor::Goto(self.x/2-10,self.y/2-3),
+        termion::color::Fg(color::LightBlack),
+        termion::color::Bg(color::White),
+        String::from("Health"),
+        termion::color::Bg(color::Reset),
+        termion::color::Fg(color::Reset),
+        format!(" {}",chars[index].health),
+
+
+        termion::cursor::Goto(self.x/2-10,self.y/2-2),
+        termion::color::Fg(color::LightBlack),
+        termion::color::Bg(color::White),
+        String::from("Weapon"),
+        termion::color::Bg(color::Reset),
+        termion::color::Fg(color::Reset),
+        format!(" {:?}",chars[index].weapon),
+
+        termion::cursor::Goto(self.x/2-10,self.y/2-1),
+        termion::color::Fg(color::LightBlack),
+        termion::color::Bg(color::White),
+        String::from("Armour"),
+        termion::color::Bg(color::Reset),
+        termion::color::Fg(color::Reset),
+        format!(" {:?}",chars[index].armour),
+
         //  TODO complete the listing
         // name: asd
         // health
@@ -486,7 +519,6 @@ pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
         
         ).unwrap();
 
-
     for key_press in self.stdin.keys() {
 
         // this match case is ugly af but ig this is how rust works
@@ -495,14 +527,109 @@ pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
                 match _key {
 
                     termion::event::Key::Left => {
-                        if index -1 >= 0 { index -= 1 }
+                        if index != 0 { 
+                            index -= 1;
 
+                        writeln!( self.stdout, 
+                            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", 
+                            termion::clear::All,
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            chars[index].name,
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-3),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Health"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                            format!(" {}",chars[index].health),
+                    
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-2),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Weapon"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                            format!(" {:?}",chars[index].weapon),
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-1),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Armour"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                            format!(" {:?}",chars[index].armour),
+                    
+                            //  TODO complete the listing
+                            // name: asd
+                            // health
+                            // weapon:
+                            // Attack: 3, Bonus: Void +3 dmg
+                            // armor
+                            // protection: 4 Bonus:none,
+                            //
+                            
+                            ).unwrap();
+                        }
                     }
 
                     termion::event::Key::Right => {
-                        if index +1 <= chars.len() { index += 1 }
+                        if index + 1 != chars.len() { 
+                            index += 1;
 
+                        writeln!( self.stdout, 
+                            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", 
+                            termion::clear::All,
 
+                            termion::cursor::Goto(self.x/2-10,self.y/2),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            chars[index].name,
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-3),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Health"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                            format!(" {}",chars[index].health),
+                    
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-2),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Weapon"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),
+                            format!(" {:?}",chars[index].weapon),
+                    
+                            termion::cursor::Goto(self.x/2-10,self.y/2-1),
+                            termion::color::Fg(color::LightBlack),
+                            termion::color::Bg(color::White),
+                            String::from("Armour"),
+                            termion::color::Bg(color::Reset),
+                            termion::color::Fg(color::Reset),   
+                            format!(" {:?}",chars[index].armour),
+                    
+                            //  TODO complete the listing
+                            // name: asd
+                            // health
+                            // weapon:
+                            // Attack: 3, Bonus: Void +3 dmg
+                            // armor
+                            // protection: 4 Bonus:none,
+                            //
+                            
+                            ).unwrap();
+                         }
                     }
                     
                     //enter
@@ -555,15 +682,16 @@ impl<'a> GuiInventory<'a> {
 
         for i in 0..90{
 
-            if current_row_x * 5 + 6 < self.x{
+
+            if current_row_x * 5 + 6 < self.x {
             print_string.push_str(
                 format!("{}{}",
                 termion::cursor::Goto
                 (
                     //x
-                    current_row_x * 5 + 5,
+                    current_row_x * 5 + 2,
                     //y
-                    current_row_y * 5 + 5,
+                    current_row_y * 5 + 2,
 
                 ), i
             ).as_str()

@@ -77,10 +77,6 @@ fn main() {
     ];
     
     // player selecting from characters
-    let choosen_character:usize = async_std::task::block_on(chooseCharacter( characters.clone() ));
-
-
-    let mut game: Game = Game::new(characters[choosen_character].to_owned());
 
     let mut stdout = stdout().into_raw_mode().unwrap();
     
@@ -92,6 +88,9 @@ fn main() {
         reader,
         &mut stdin
         );
+
+    let choosen_character:usize =  terminal.choosen_character(characters.clone());
+    let mut game: Game = Game::new(characters[choosen_character].to_owned());
 
     // where the game runs
     loop {
