@@ -42,7 +42,7 @@ hogy melyik classal kezd
 </details>
 
 
-# Developer on
+# Developed on
 ### Developed on:
 - OS: Fedora 37 Workstation Edition
 - Kernel: 6.1.6-200
