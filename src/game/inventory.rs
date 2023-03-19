@@ -10,8 +10,8 @@ pub struct Inventory{
     pub potions: HashMap<i128, Potion>,
     pub armours: HashMap<i128,Armour>,
     pub swords: HashMap<i128, Sword>,
-
 }
+
 impl  Inventory {
     
     pub fn new() -> Inventory{
@@ -50,7 +50,6 @@ impl  Inventory {
                         key=rand::thread_rng().gen_range(0..9999999999);
                     }
                     self.potions.insert(key, n,  );
-                   
                    }
 
                    RewardType::Sword{ data: n} =>{

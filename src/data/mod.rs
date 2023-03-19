@@ -7,7 +7,9 @@ pub struct Save {
 }
 
 impl Save {
-
+    pub fn new( game:Game ) -> Save{
+        Save { game: game }
+    }
     pub fn toFile( path: String ){
         // asd
     }
