@@ -1,9 +1,9 @@
 
-use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout, SeekFrom, Stdin}, collections::HashMap, ops::Add};
+use std::{thread, time::{self, Duration}, vec, io::{stdin, stdout,Write, Stdout, SeekFrom, Stdin}, collections::HashMap, ops::Add, fmt::format};
 use async_std::stream::StreamExt;
 
 use crossterm::{
-    event::{ Event, EventStream, KeyCode},
+    event::{ Event, EventStream, KeyCode}, cursor,
 };
 
 use futures::{FutureExt, select};
@@ -37,7 +37,7 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
         format!("{} {:.2} {} Health", color::Bg(color::Red), game.character.health.round(), color::Bg(color::Reset)),                
         
         termion::cursor::Goto(1,y-3),
-        format!("{} {:.2} {} Attack", color::Bg(color::LightYellow), game.character.weapon.normal.round(), color::Bg(color::Reset)),                
+        format!("{} {:.2} {} Attack", color::Bg(color::LightYellow), game.character.weapon.normal.round() + game.attack.round(), color::Bg(color::Reset)),                
 
 
         termion::cursor::Goto(1,y-2),
@@ -176,6 +176,8 @@ impl Hitbar {
                 self.print_string,
                 ).unwrap();
             
+
+
             // filtering input for enter  & space and adjusting scores according to it
             select! {
                 _ = delay => {  },
@@ -188,8 +190,10 @@ impl Hitbar {
                                     // if player hit between hitrange
                                     if  self.hit_range[0] <= self.marker && self.marker <= self.hit_range[1]{
                                         writeln!( self.stdout, 
-                                            "{} {} Hit!{}", 
-                                            termion::cursor::Goto(3,5),
+                                            "{}{}{}{} Hit!{}", 
+                                            termion::cursor::Goto(x/2,y/2-1),
+                                            termion::clear::AfterCursor,
+                                            termion::cursor::Goto(x/2-3,y/2-1),
                                             color::Fg(color::Green),
                                             color::Fg(color::Reset),
                                             ).unwrap();
@@ -199,8 +203,10 @@ impl Hitbar {
                                     }else{
                                     // if not, increase speed and take one from the dmg chances
                                     writeln!( self.stdout, 
-                                        "{} {} Miss!{}", 
-                                        termion::cursor::Goto(3,5),
+                                        "{}{}{}{} Miss!{}", 
+                                        termion::cursor::Goto(x/2,y/2-1),
+                                        termion::clear::AfterCursor,
+                                        termion::cursor::Goto(x/2-5,y/2-1),
                                         color::Fg(color::Red),
                                         color::Fg(color::Reset),
                                         ).unwrap();
@@ -294,16 +300,15 @@ impl<'a> Tui<'a> {
     
             termion::clear::All,
     
-            termion::cursor::Goto(x/2,y/2-5),
+            termion::cursor::Goto((x-7)/2,y/2-5),
             termion::color::Fg(color::Black),
             termion::color::Bg(color::LightWhite),
             String::from("ENTER"),
-    
             termion::color::Fg(Reset),
             termion::color::Bg(Reset),
             String::from(" Next stage"),
     
-            termion::cursor::Goto(x/2,y/2-4),
+            termion::cursor::Goto((x-7)/2,y/2-4),
             termion::color::Fg(color::Black),
             termion::color::Bg(color::LightWhite),
             String::from("I"),
@@ -313,7 +318,7 @@ impl<'a> Tui<'a> {
             String::from(" Inventory"),
     
     
-            termion::cursor::Goto(x/2,y/2-3),
+            termion::cursor::Goto((x-7)/2,y/2-3),
             termion::color::Fg(color::Black),
             termion::color::Bg(color::LightWhite),
             String::from("U"),
@@ -322,7 +327,7 @@ impl<'a> Tui<'a> {
             termion::color::Bg(Reset),
             String::from(" Upgrade"),
     
-            termion::cursor::Goto(x/2,y/2-2),
+            termion::cursor::Goto((x-7)/2,y/2-2),
             termion::color::Fg(color::Black),
             termion::color::Bg(color::LightWhite),
             String::from("S"),
@@ -331,7 +336,7 @@ impl<'a> Tui<'a> {
             termion::color::Bg(Reset),
             String::from(" Stats"),
             
-            termion::cursor::Goto(x/2,y/2-1),
+            termion::cursor::Goto((x-7)/2,y/2-1),
             termion::color::Fg(color::Black),
             termion::color::Bg(color::LightWhite),
             String::from("Q"),
@@ -371,12 +376,9 @@ impl<'a> Tui<'a> {
                                     's' => {
                                         return 4
                                     }
-                                    
                                     // quit
-                                    'q' =>{
-                                        
+                                    'q' =>{   
                                         return 0
-    
                                     }
     
                                 _=> {}
@@ -668,7 +670,117 @@ pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
 
     return index
 }
+
+// this actually doesnt need to be async but igaf
+pub async fn upgrade(&mut self,  game: &mut Game ) {
+
+    let mut stack_upgrade: bool = false;
+    for key_press in self.stdin.keys() {
+    
+        // Todo , nice colors depending on the range of xps
+        // Todo maybe add undo (hard)
+        writeln!( self.stdout, 
+            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", 
+            termion::clear::All,
+            termion::cursor::Goto(self.x/2-10, 1),
+            "Choose what to upgrade (1-3)",
+            termion::cursor::Goto(self.x/2-5, 2),
+            "1xp = 0.1 bonus",
+            termion::cursor::Goto(self.x/2-5, 3),
+            "[S] upgrade by 10: ",
+            stack_upgrade,
+            termion::cursor::Goto(self.x/2 -5, self.y/2-4),
+            format!("Health: {:.2}", game.character.health),
+
+            termion::cursor::Goto(self.x/2 -5, self.y/2-3),
+            format!("Attack: {:.2}", game.attack),
+
+            termion::cursor::Goto(self.x/2 -5, self.y/2-2),
+            format!("Speed: {:.2}", game.speed),
+
+            termion::cursor::Goto(self.x/2 -5, self.y/2-1),
+            format!("XP left: {:.2}", game.xp),
+            ).unwrap();
+
+        // this match case is ugly af but ig this is how rust works
+        match key_press {
+
+            Ok(_key) => {
+                match _key {
+
+                    // health
+                    termion::event::Key::Char('1') => {
+
+                        if stack_upgrade {
+                            for i in 0..10 {
+                                if game.is_upgrade_fundable() {
+                                    game.upgrade(crate::game::UpgradeType::Health)
+                                }   
+                            }
+                        }  
+                        else {
+                            if game.is_upgrade_fundable() {
+                                game.upgrade(crate::game::UpgradeType::Health)
+                            }   
+                        }
+                               
+                    }
+                    // Attack
+                    termion::event::Key::Char('2') => {
+                        if stack_upgrade {
+                            for i in 0..10 {
+                                if game.is_upgrade_fundable() {
+                                    game.upgrade(crate::game::UpgradeType::Attack)
+                                }   
+                            }
+                        }  
+                        else {
+                            if game.is_upgrade_fundable() {
+                                game.upgrade(crate::game::UpgradeType::Attack)
+                            }   
+                        }
+                    }
+                    // Speed
+                    termion::event::Key::Char('3') => { 
+                        if stack_upgrade {
+                            for i in 0..10 {
+                                if game.is_upgrade_fundable() {
+                                    game.upgrade(crate::game::UpgradeType::Speed)
+                                }   
+                            }
+                        }  
+                        else {
+                            if game.is_upgrade_fundable() {
+                                game.upgrade(crate::game::UpgradeType::Speed)
+                            }   
+                        }
+                     }
+
+                    termion::event::Key::Char('s') => {
+                        if stack_upgrade {
+                            stack_upgrade = false;
+                        } else{
+                            stack_upgrade = true;
+                        }
+                    }
+                    // exiting
+                    termion::event::Key::Backspace => { break}
+                    termion::event::Key::Esc => { break}
+                    termion::event::Key::Char('q') => { break}
+                    _=> {}
+                }
+
+            }
+            Err(_error) =>{}
+        }
+     }  // end of for key press
+    
+
+
 }
+
+}
+
 
 #[derive(PartialEq)]
 enum Tab {
@@ -775,7 +887,58 @@ impl<'a> GuiInventory<'a> {
 
         print_string.push_str(push_string.as_str());
 
+        // used for margin
+        let  console_max_x = self.x - 10;
+        let console_max_y = 4;
 
+
+        let mut current_row_x = 0;
+        let mut current_row_y = 0;
+
+        let mut max: bool = false;
+        // idk wtf happens here. DONT TOUCH
+        for i in 0..self.swords.len() {        
+
+            if (current_row_x * 4 + 4) >= console_max_x {
+                if !max {
+                    self.rows_x = current_row_x as i128;
+                    max = true;
+                }
+                current_row_y += 1;
+                current_row_x = 1;
+                self.rows_y += 1;
+
+            }else {
+                current_row_x += 1;                
+            }
+            if i == self.index as usize {
+
+            print_string.push_str(
+                format!("{}{}{}{}{}{}",
+                                
+                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 1 + console_max_y),
+                String::from("XXX"),
+                termion::cursor::Goto(current_row_x * 4, current_row_y * 4 + 2 + console_max_y),
+                String::from("XoX"),
+                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 3 + console_max_y),
+                String::from("XXX"),
+                ).as_str()
+            );
+            }
+            else {   
+            print_string.push_str(
+                format!("{}{}{}{}{}{}",
+                                
+                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 1 + console_max_y),
+                String::from("  "),
+                termion::cursor::Goto(current_row_x * 4, current_row_y * 4 + 2 + console_max_y),
+                String::from(" o "),
+                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 3 + console_max_y),
+                String::from("  "),
+                ).as_str()
+            );
+                }
+        }
 
         // printing out the complete inventory
         writeln!(self.stdout, "{}", 

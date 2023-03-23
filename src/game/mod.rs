@@ -3,17 +3,20 @@ pub mod items;
 pub mod inventory;
 
 
-use std::{vec, io::{stdout, Write, Stdout}, thread, time, collections::HashMap, num::NonZeroI128, };
+use std::{vec, io::{stdout, Write, Stdout}, thread, time, };
 use crossterm::event::EventStream;
 use rand::{Rng, distributions::Alphanumeric};
 use termion::{raw::{IntoRawMode, RawTerminal}, color};
-
 use crate::tui::Hitbar;
-
 use self::{enemy::{Enemy, Faction, Reward, RewardType}, items::{Bonus, Sword, Armour}, inventory::Inventory};
+use serde::{Serialize, Deserialize};
 
 
-
+pub enum UpgradeType {
+    Health,
+    Attack,
+    Speed, // the amount of speed the charachter has, the easier it is to hit the targets, since this slows that down
+}
 #[derive(Debug, Clone)]
 pub struct  Character {
     pub name: String,
@@ -46,8 +49,11 @@ pub struct Game {
     pub level: i128,
 
     // uuid, data
-    pub inventory: Inventory
+    pub inventory: Inventory,
 
+    // upgradable bonus statistics
+    pub speed:f64,
+    pub attack: f64,
 }
 
 impl Game {
@@ -61,6 +67,10 @@ impl Game {
             xp: 1.0,
             level:0,
             inventory: Inventory::new(),
+            
+            // player starts at normal speed with no bonuses
+            speed: 1.0,
+            attack: 0.0,
 
             enemy: Enemy { 
                 name: String::from("skelly"), 
@@ -68,19 +78,15 @@ impl Game {
                 health: 2.0, 
                 damage: 2.0, 
                 xp: 1.0, 
-
                 reward: Reward::None
-
-                 },
-
-
+                },
         }
     }
     pub fn borrow_data( &mut self ) -> &mut Game {
         return  self
     }
     
-    pub fn generate_enemy( &mut self ){
+pub fn generate_enemy( &mut self ){
 
         let factions: Vec<Faction> = vec![ 
             Faction::Skeleton,
@@ -232,9 +238,10 @@ pub fn missed_attack(&mut self){
 
 
 pub fn hit_attack(&mut self){
-    self.enemy.health -= self.character.weapon.normal; 
+    self.enemy.health -= (self.character.weapon.normal + self.attack) ; 
 }
 
+// TODO migrate this to TUI struct
 pub fn announce_death(&self, stdout: &mut RawTerminal<Stdout>){
 
     let (x, y) = termion::terminal_size().unwrap();
@@ -270,7 +277,7 @@ pub fn announce_death(&self, stdout: &mut RawTerminal<Stdout>){
          ).expect("error printing")
 
 }
-
+// TODO migrate this to TUI struct
 pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 
     let (x, y) = termion::terminal_size().unwrap();
@@ -329,11 +336,11 @@ pub fn announce_enemy(&self, stdout: &mut RawTerminal<Stdout>){
 
 pub async fn fight_enemy(&mut self) -> bool{
 
-
     // let obstacle = rand::thread_rng().gen_range(0..3);
     let obstacle = 0;
 
 
+    // TODO migrate games to TUI object too
     match obstacle {
         // hitmarker
         0 => {
@@ -370,6 +377,41 @@ pub fn enemy_killed( &mut self ){
     self.xp += self.enemy.xp;
 
 }
+
+pub fn upgrade(&mut self, what_to_upgrade: UpgradeType ) {
+
+    match what_to_upgrade {
+        
+        UpgradeType::Attack => {
+            // calculate the amount of attack the player gets in bonus
+            // 1xp = 0.1 attack? idk
+            self.xp -=1.0;
+            self.attack += 0.1;
+        }
+
+        UpgradeType::Health =>{
+            self.xp -=1.0;
+            self.character.health += 0.1;
+        }
+
+        UpgradeType::Speed =>{
+            self.xp -=1.0;
+            self.speed += 0.1;
+        }
+    }
+}
+
+pub fn is_upgrade_fundable(&mut self) -> bool {
+    if self.xp - 1.0 < 0.0 {
+        return false
+    }
+    true
+}
+// pub fn save_to_file(&mut self, path: String) {
+
+//     let j = serde_json::to_string(self).expect("Failed to convert to JSON");
+
+// }
 }
 
 

@@ -127,7 +127,11 @@ fn main() {
 
             }
             
-            3 => {}
+            // upgrade
+            3 => {
+                game.xp += 100.0;
+                async_std::task::block_on( terminal.upgrade( &mut game ) );
+            }
             4 => {}
 
             
