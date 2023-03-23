@@ -8,7 +8,6 @@ use crossterm::{
 
 use futures::{FutureExt, select};
 use futures_timer::Delay;
-use rand::{thread_rng, Rng, distributions::Alphanumeric};
 use termion::{raw::{ RawTerminal}, color::{self, Reset}, input::TermRead};
 
 use crate::{game::{Game, items::{Potion, Sword, Armour}, Character}, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
@@ -408,23 +407,16 @@ impl<'a> Tui<'a> {
  // user can EQUIP DEQUIP DELETE 
 pub async fn  inventory( &mut self,  game: &mut Game){
 
-    let mut fake_swords: HashMap<i128, Sword> = HashMap::new();
-
-    for i in 0..20 {
-        fake_swords.insert(
-            rand::thread_rng().gen_range(0..9999999999),
-            Sword { 
-                name: rand::thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(7)
-                .map(char::from)
-                .collect(),
-                normal: 1.0, bonus: crate::game::items::Bonus::Zero } 
-        );
-
-    }
-
-    let mut gui: GuiInventory = GuiInventory::new(game.inventory.potions.clone(), fake_swords, game.inventory.armours.clone(), self.stdout, self.x, self.y);
+   
+   let mut gui: GuiInventory = GuiInventory { 
+    index: 0, 
+    potions: game.inventory.potions.clone(), 
+    swords: game.inventory.swords.clone(), 
+    armours: game.inventory.armours.clone(),
+    stdout: self.stdout,
+    x: self.x,
+    y: self.y,
+    };
 
     gui.render();
 
@@ -436,39 +428,19 @@ pub async fn  inventory( &mut self,  game: &mut Game){
             Ok(_key) => {
                 match _key {
 
-                    termion::event::Key::Left => {  
-                        if gui.index -1 != 0 {
-                            gui.set_index(gui.index-1);                     
-                        };
-                        gui.render();
-
+                    termion::event::Key::Left => {
+                        
                     }
 
                     termion::event::Key::Right => {
-                        if gui.index as i128 +1  != gui.rows_x   {
-                            gui.index += 1                
-                        }
-
-                        gui.render();
 
                     }
                     termion::event::Key::Up => {
-
-                        if gui.rows_y - 1 != 0 {
-                            gui.rows_y -= 1;
-                        };
-                        gui.render();
 
                     }
 
                     termion::event::Key::Down => {
                         
-                        if gui.rows_y + 1 < gui.rows_y {
-                            gui.rows_y += 1;
-                        };
-
-                        gui.render();
-
                     }
                     
                     // exiting
@@ -486,11 +458,16 @@ pub async fn  inventory( &mut self,  game: &mut Game){
             Err(_error) =>{}
         }
     
+    for (key, value) in game.inventory.swords.clone() {
 
+
+    }
 
      }  
 
 }
+
+
 
 pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
 
@@ -790,100 +767,75 @@ enum Tab {
 }
 struct GuiInventory<'a> {
 
-    pub index: i8,
-    pub rows_y: i128,
-    pub rows_x: i128,
+    index: i8,
 
-    pub tab: Tab, 
     potions: HashMap<i128,Potion>,
     swords: HashMap<i128,Sword>,
     armours: HashMap<i128,Armour>,
- 
+
     stdout: &'a mut RawTerminal<Stdout>,
     
     x: u16,
     y: u16,
-
-
-    pages: i128,
-    currentPage: i128,
 
 }
 
 
 impl<'a> GuiInventory<'a> {
 
-    pub fn new(
-        potions: HashMap<i128,Potion>,
-        swords: HashMap<i128,Sword>,
-        armours: HashMap<i128,Armour>,
-        stdout: &'a mut RawTerminal<Stdout>,
-        x: u16,
-        y: u16,
-    ) -> GuiInventory {
-            GuiInventory { 
-                index: 0, 
-                potions: potions,
-                swords: swords, 
-                armours: armours,
-                stdout: stdout,
-                x: x,
-                y: y,
-                rows_y: 0,
-                pages:0,
-                rows_x: 0,
-                currentPage: 0, 
-                tab: Tab::Sword,
-            }
-    }
-    
     pub fn render( &mut self ){
 
         let mut print_string: String = String::new();
-        
-        print_string.push_str(
-            format!("{}{}Page:{}/{}",
-                termion::clear::All,
-                termion::cursor::Goto(self.x - 10,self.y -5),
-                self.currentPage,
-                self.pages,
+
+
+        // 5x5 grid  | illustration 
+        //     /////
+        //     \\2//
+        //     /////
+
+        // grid widht height + 1 margin / 6
+ 
+        let mut current_row_x = 0;
+        let mut current_row_y = 0;
+
+        for i in 0..90{
+
+
+            if current_row_x * 5 + 6 < self.x {
+            print_string.push_str(
+                format!("{}{}",
+                termion::cursor::Goto
+                (
+                    //x
+                    current_row_x * 5 + 2,
+                    //y
+                    current_row_y * 5 + 2,
+
+                ), i
             ).as_str()
-        );
+            );
+            current_row_x += 1;
 
+            } else {
 
+            current_row_y += 1;
+            current_row_x = 0;
+            
+            print_string.push_str(
+                format!("{}{}",
+                termion::cursor::Goto
+                (
+                    //x
+                    current_row_x * 5 + 6,
+                    //y
+                    current_row_y * 6,
 
-        let mut push_string: String = format!("{}", termion::cursor::Goto(1,3), )
-            ;
-            match self.tab {
-                Tab::Sword => {
-                    push_string.push_str(format!("{}{}{}{}{}",
-                    termion::color::Bg(color::White),
-                    termion::color::Fg(color::Black),
-                    "Weapons",
-                    termion::color::Bg(color::Reset),
-                    termion::color::Bg(color::Reset),
-                ).as_str())
-                }
-                Tab::Armour => {
-                    push_string.push_str(format!("  {}{}{}{}{}",
-                    termion::color::Bg(color::Black),
-                    termion::color::Fg(color::White),
-                    "Armours",
-                    termion::color::Bg(color::Reset),
-                    termion::color::Bg(color::Reset),
-                ).as_str())
-                }
-                Tab::Potion => {
-                    push_string.push_str(format!("{}{}{}{}{}{}",
-                    termion::cursor::Goto(18,3),
-                    termion::color::Bg(color::Black),
-                    termion::color::Fg(color::White),
-                    termion::cursor::Goto(25,3),
-                    termion::color::Bg(color::Reset),
-                    termion::color::Bg(color::Reset),
-                ).as_str())
-                }
+                ), i
+                ).as_str()
+            );
+
             }
+        }
 
         print_string.push_str(push_string.as_str());
 
@@ -951,37 +903,3 @@ impl<'a> GuiInventory<'a> {
         self.index = index
     }
 }
-            
-// termion::cursor::Goto(self.x/2-10,self.y/2-1),
-// termion::color::Fg(color::LightBlack),
-// termion::color::Bg(color::White),
-// String::from("Armour"),
-// termion::color::Bg(color::Reset),
-// termion::color::Fg(color::Reset),   
-// format!(" {:?}",chars[index].armour),
-// ⠀⠀⠘⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⡜⠀⠀⠀
-// ⠀⠀⠀⠑⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡔⠁⠀⠀⠀
-// ⠀⠀⠀⠀⠈⠢⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠴⠊⠀⠀⠀⠀⠀
-// ⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⢀⣀⣀⣀⣀⣀⡀⠤⠄⠒⠈⠀⠀⠀⠀⠀⠀⠀⠀
-// ⠀⠀⠀⠀⠀⠀⠀⠘⣀⠄⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-// ⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⡜⠘⠀⠀⠀⠀⠈⣿⠀⠁⣿⢳⠁⢈⢰⡦⠈⠀⢻
-// ⣿⣿⡏⠀⠀⢀⣀⠀⠀⡀⠀⠀⢀⠀⠀⠁⠀⠀⠈⠉⠀⠀⠀⡘⠀⢰⠛⢠⣴⣄⣌
-// ⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⢠⣠⡀⠀⠀⠀⠂⠀⠀⠀⠐⠀⠈⣡⠻⢹⢿
-// ⣿⣿⠀⠀⠀⠁⠀⠀⠀⠄⠀⠀⡀⣀⣼⣟⣿⢵⣤⣤⣤⣤⣤⣤⣄⣀⣀⣠⠀⠢⣽
-// ⣿⡿⠀⠀⠀⠀⠀⢐⣌⢖⣰⠊⠁⢸⣿⡟⠈⠀⢾⣿⣿⣿⣿⣿⣿⣿⣿⣾⡄⢰⢺
-// ⣿⡇⠀⠀⠀⠀⢀⡀⢴⢖⣠⣣⣴⣿⢿⡇⣈⠐⢺⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⢠⣸
-// ⣿⣷⡀⠀⠀⠀⠀⠸⣼⣿⣿⣿⣿⡷⠋⠅⠀⡀⢼⣿⠯⣿⣿⣿⣿⣿⣿⣿⡇⣼⣿
-// ⡿⠁⠸⣄⣦⡀⠀⢡⣿⣿⣿⣿⣏⡤⠄⠄⠀⠀⠈⠉⠁⠘⢿⣿⣿⣿⣿⣿⣯⢸⣿
-// ⠇⠀⠀⡹⢿⡏⠀⣾⣿⣟⠋⠉⠁⠀⠀⠀⠀⣀⣀⠀⠀⠀⢸⣿⠎⠉⠉⠉⠛⣤⣿
-// ⡆⠀⡀⢣⢈⡟⠠⠻⣿⣿⣷⡄⠀⠀⢸⣶⣷⣷⣧⡄⠀⠀⢿⣧⢀⡀⠀⠉⢡⣿⣿
-// ⣿⣦⡀⠘⢼⠃⣠⡲⠛⢿⡿⣿⡀⡀⠀⠹⣿⣿⡟⠀⠠⣤⠘⣿⣶⣿⣶⡾⣳⣿⣿
-// ⣿⡿⣿⣶⡌⠰⡅⠌⠠⠈⠈⠙⢙⠑⢰⠀⠨⠟⠀⠀⣴⢌⡅⢻⣿⣿⣿⡇⣿⣿⣿
-// ⣿⢇⣿⣿⠣⢿⣮⠀⢀⡀⠀⠀⠈⠁⣶⠀⠀⠀⠀⠀⠁⠀⢡⣺⣿⣿⡿⣸⣿⣿⣿
-// ⣿⣾⣿⣏⠐⣿⢟⡈⠂⠀⠠⠀⠀⠀⣆⠀⠀⠀⠀⠀⠀⣢⣼⣸⣿⡿⢈⣿⣿⣿⣿
-// ⣿⣿⣿⠃⡀⠈⠑⠁⠀⠄⠀⠀⠀⠲⠀⠀⠄⣀⠀⣸⣷⣮⣍⠃⢹⠇⣿⣿⣿⣿⣿
-// ⣿⣿⣿⢀⣾⣷⣶⣌⠀⠠⠀⠀⢀⠍⠀⠀⠀⠀⠉⠁⠈⠙⠋⢰⡝⣼⣿⣿⣿⣿⣿
-// ⣿⣿⣿⠋⠀⣼⣿⣿⣷⣄⠀⠀⠀⠊⠀⠀⠀⠀⠀⠀⠄⡀⢀⣼⢣⣿⣿⣿⣿⣿⣿
-// ⣿⣿⣯⠀⢸⣿⣿⣿⡟⠛⠳⣄⠀⠀⠀⠀⠘⠌⠓⡀⢰⣮⣾⢠⣿⣿⣿⣿⣿⣿⣿
-// ⣿⣿⣧⠀⣹⣿⣿⣿⠗⠀⠀⠀⠀⠀⣀⡀⠀⠈⠀⠀⠈⠝⣡⣾⣿⣿⣿⣿⣿⣿⣿
-// ⣿⣿⡏⠀⣿⣿⣿⠿⠃⢀⣴⣶⣾⣿⣿⣿⣿⣷⣾⢠⣶⣾⣮⣙⡻⣿⢿⣿⣿⣿⣿
-// ⣿⣿⡇⠀⣿⣿⠃⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⡟⡼⠿⣿⣿⣿⣿⣮⡑⡝⣿⣿⣿

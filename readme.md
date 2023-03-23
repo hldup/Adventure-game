@@ -12,6 +12,7 @@ egyedi legyen és egyik se legyen sokkal erősebb
 támadó erő: a ellenfélre mért sebzés mértéke
 életerő: emennyi sebzést el tudunk szenvedni, ha <=0 akkor meghaltunk/megöltük az ellenfelet
 védelem: 1 védelem = 1% sebződés csökkenés, tehát ha az ellenfél 5 sebzést osztana ki, de van 10 védelmünk, akkor csak 4.5 sebzést kapunk
+
 Minden ellenfél legyőzése után jár tapasztalati pont(tp) és megadott tapasztalati pont után
 szintet lép a karakterünk és a játékos tudja fejleszteni valamely statját
 A játékos nevét, class-t szintet és a statokat mentsük le egy fájlba,
@@ -41,7 +42,7 @@ hogy melyik classal kezd
 </details>
 
 
-# Developer on
+# Developed on
 ### Developed on:
 - OS: Fedora 37 Workstation Edition
 - Kernel: 6.1.6-200
