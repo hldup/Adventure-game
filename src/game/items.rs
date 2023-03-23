@@ -1,6 +1,8 @@
+use serde::{Serialize, Deserialize};
+
 use super::enemy::Faction;
 
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 pub enum Bonus {
     Zero,
     Has{
@@ -9,21 +11,21 @@ pub enum Bonus {
     }
 }
 
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 pub enum Effect {
     Heal,
     Protection,
     Attack
 }
 
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 
 pub struct Potion {
     pub effect: Effect, // attack
     pub amount: f64, //3
     pub one_use: bool // true
 }
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 
 pub struct Sword {
     
@@ -35,7 +37,8 @@ pub struct Sword {
 
 }
 
-#[derive(Debug,Clone,PartialEq)]
+
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 pub struct Armour {
     
     pub name: String,

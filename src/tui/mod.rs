@@ -8,6 +8,7 @@ use crossterm::{
 
 use futures::{FutureExt, select};
 use futures_timer::Delay;
+use rand::{thread_rng, Rng};
 use termion::{raw::{ RawTerminal}, color::{self, Reset}, input::TermRead};
 
 use crate::{game::{Game, items::{Potion, Sword, Armour}, Character}, input_handler::{FilterInputStreamForArrows, GameDirectionKey}};
@@ -46,6 +47,8 @@ fn display_stats(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
         termion::cursor::Goto(1,y-1),
         format!("{} {:.2} {} XP", color::Bg(color::LightGreen), game.xp, color::Bg(color::Reset)),                
 
+         
+
 
         ).unwrap();
 
@@ -70,6 +73,7 @@ fn display_enemy(stdout:&mut RawTerminal<Stdout>, game:Game, x:u16, y:u16){
 
         termion::cursor::Goto(x-16,y-2),
         enemy_faction,
+
 
         ).unwrap();
 
@@ -105,7 +109,7 @@ impl Hitbar {
             print_string: String::new(),
             marker: 0,
             backwards_counter: 0,
-            hit_range: vec![3,6],
+            hit_range: vec![1,1],
             speed: 80,
          }
     }
@@ -113,8 +117,10 @@ impl Hitbar {
 
      pub async fn play(&mut self ) -> bool{
         writeln!( self.stdout, "{}",  termion::clear::All, ).unwrap();
+        let (x, y) = termion::terminal_size().unwrap();
+        self.gen_range();
         loop  {
-
+            
             // player go killed
             if self.game.character.health <= 0.0{
                 return false
@@ -126,15 +132,16 @@ impl Hitbar {
             };
 
 
-            let (x, y) = termion::terminal_size().unwrap();
-
              // displaying shit in the ui
              display_stats(&mut self.stdout, self.game.clone(), x,y);
              display_enemy(&mut self.stdout, self.game.clone(), x, y);
              display_level(&mut self.stdout, self.game.clone(), x, y);
 
             // setting color back and clearing just in case 
-             writeln!( self.stdout, "{}",  color::Fg(color::Reset), ).unwrap();
+             writeln!( self.stdout, "{}{}{}",  color::Fg(color::Reset),
+             termion::cursor::Goto(x/2, y/2+1),
+             format!("Speed: {}", self.speed)
+             ).unwrap();
 
 
              let mut delay = Delay::new(Duration::from_millis( self.speed )).fuse();
@@ -198,7 +205,7 @@ impl Hitbar {
                                             ).unwrap();
 
                                             self.game.hit_attack();
-                                            
+                                            self.gen_range();
                                     }else{
                                     // if not, increase speed and take one from the dmg chances
                                     writeln!( self.stdout, 
@@ -211,6 +218,7 @@ impl Hitbar {
                                         ).unwrap();
 
                                         self.game.missed_attack();
+                                        self.gen_range();
                                     }
                                    } // exit imnplementation
                                 if event == Event::Key(KeyCode::Esc.into()) || event == Event::Key(KeyCode::Char('q').into()) { panic!("exited game"); }        
@@ -221,6 +229,29 @@ impl Hitbar {
                 }
             };
         }
+}
+
+fn gen_range( &mut self){ 
+
+    // generate between two options:
+    // fast speed, or small range
+
+    if thread_rng().gen_bool( 0.5 ){
+
+        self.hit_range = vec![
+            thread_rng().gen_range(4..7),
+            thread_rng().gen_range(7..10)
+        ];
+    } 
+    else{
+
+        self.hit_range = vec![
+            thread_rng().gen_range(0..7),
+            thread_rng().gen_range(7..14)
+        ];
+
+        self.speed = thread_rng().gen_range(20..100);
+    }
 }
 }
 
@@ -652,8 +683,31 @@ pub fn choosen_character(&mut self ,chars: Vec<Character>) -> usize {
 pub async fn upgrade(&mut self,  game: &mut Game ) {
 
     let mut stack_upgrade: bool = false;
+    writeln!( self.stdout, 
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", 
+        termion::clear::All,
+        termion::cursor::Goto(self.x/2-10, 1),
+        "Choose what to upgrade (1-3)",
+        termion::cursor::Goto(self.x/2-5, 2),
+        "1xp = 0.1 bonus",
+        termion::cursor::Goto(self.x/2-5, 3),
+        "[S] upgrade by 10: ",
+        stack_upgrade,
+        termion::cursor::Goto(self.x/2 -5, self.y/2-4),
+        format!("Health: {:.2}", game.character.health),
+
+        termion::cursor::Goto(self.x/2 -5, self.y/2-3),
+        format!("Attack: {:.2}", game.attack),
+
+        termion::cursor::Goto(self.x/2 -5, self.y/2-2),
+        format!("Speed: {:.2}", game.speed),
+
+        termion::cursor::Goto(self.x/2 -5, self.y/2-1),
+        format!("XP left: {:.2}", game.xp),
+        ).unwrap();
+        
     for key_press in self.stdin.keys() {
-    
+        // TODO option to spen all one one point, or to spend them all equeally
         // Todo , nice colors depending on the range of xps
         // Todo maybe add undo (hard)
         writeln!( self.stdout, 
@@ -837,66 +891,7 @@ impl<'a> GuiInventory<'a> {
             }
         }
 
-        print_string.push_str(push_string.as_str());
-
-        // used for margin
-        let  console_max_x = self.x - 10;
-        let console_max_y = 4;
-
-
-        let mut current_row_x = 0;
-        let mut current_row_y = 0;
-
-        let mut max: bool = false;
-        // idk wtf happens here. DONT TOUCH
-        for i in 0..self.swords.len() {        
-
-            if (current_row_x * 4 + 4) >= console_max_x {
-                if !max {
-                    self.rows_x = current_row_x as i128;
-                    max = true;
-                }
-                current_row_y += 1;
-                current_row_x = 1;
-                self.rows_y += 1;
-
-            }else {
-                current_row_x += 1;                
-            }
-            if i == self.index as usize {
-
-            print_string.push_str(
-                format!("{}{}{}{}{}{}",
-                                
-                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 1 + console_max_y),
-                String::from("XXX"),
-                termion::cursor::Goto(current_row_x * 4, current_row_y * 4 + 2 + console_max_y),
-                String::from("XoX"),
-                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 3 + console_max_y),
-                String::from("XXX"),
-                ).as_str()
-            );
-            }
-            else {   
-            print_string.push_str(
-                format!("{}{}{}{}{}{}",
-                                
-                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 1 + console_max_y),
-                String::from("  "),
-                termion::cursor::Goto(current_row_x * 4, current_row_y * 4 + 2 + console_max_y),
-                String::from(" o "),
-                termion::cursor::Goto( current_row_x * 4, current_row_y * 4 + 3 + console_max_y),
-                String::from("  "),
-                ).as_str()
-            );
-                }
-        }
-
-        // printing out the complete inventory
-        writeln!(self.stdout, "{}", 
-            print_string
-        ).unwrap();
-
+    
     }
     
     pub fn set_index( &mut self, index: i8){

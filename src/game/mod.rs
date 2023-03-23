@@ -17,7 +17,7 @@ pub enum UpgradeType {
     Attack,
     Speed, // the amount of speed the charachter has, the easier it is to hit the targets, since this slows that down
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct  Character {
     pub name: String,
     
@@ -33,7 +33,7 @@ pub struct  Character {
 
 
 // same here, everything i128
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Serialize,Deserialize )]
 pub struct Game {
     /// character stats like attack, health and dodge are edited before attacks
     pub character: Character,
@@ -55,7 +55,6 @@ pub struct Game {
     pub speed:f64,
     pub attack: f64,
 }
-
 impl Game {
     // creates game object
     // at init
@@ -348,7 +347,7 @@ pub async fn fight_enemy(&mut self) -> bool{
             let reader = EventStream::new();
 
             let  mut hitbar = Hitbar::new(reader,stdout,self.to_owned());
-            
+
             return hitbar.play().await;
         },
 
@@ -404,7 +403,7 @@ pub fn upgrade(&mut self, what_to_upgrade: UpgradeType ) {
 pub fn is_upgrade_fundable(&mut self) -> bool {
     if self.xp - 1.0 < 0.0 {
         return false
-    }
+    }   
     true
 }
 // pub fn save_to_file(&mut self, path: String) {

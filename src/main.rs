@@ -1,21 +1,15 @@
-use core::panic;
 use std::io::stdin;
-// importus
 use std::{vec, io::stdout};
-
 use Adventure_game::game::items::{Bonus, Armour,Sword};
 use Adventure_game::game::{Game, Character};
-use Adventure_game::option_selector::chooseCharacter;
 use Adventure_game::tui::{Tui};
-use crossterm::{
-    event::{DisableMouseCapture, EventStream},
-};
+use crossterm::event::EventStream;
 use termion::raw::IntoRawMode;
-
-
 
 fn main() { 
 
+
+    // TODO implement saving game/ loading saves
     let characters: Vec<Character> = vec![
         Character{
             name: String::from("Tank"),
@@ -129,7 +123,6 @@ fn main() {
             
             // upgrade
             3 => {
-                game.xp += 100.0;
                 async_std::task::block_on( terminal.upgrade( &mut game ) );
             }
             4 => {}

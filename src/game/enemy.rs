@@ -1,17 +1,17 @@
 use super::items::{Sword, Armour, Potion};
+use serde::{Serialize, Deserialize};
 
 
 
 
-
-#[derive(Debug, Clone,Copy,PartialEq)]
+#[derive(Debug, Clone,Copy,PartialEq,Serialize, Deserialize)]
 pub enum Faction {
     Skeleton,
     Flesh,
     Void,
     Zero,
 }
-#[derive(Debug, Clone,PartialEq)]
+#[derive(Debug, Clone,PartialEq,Serialize,Deserialize)]
 pub enum RewardType{
     Sword{
         data: Sword,
@@ -25,7 +25,7 @@ pub enum RewardType{
         data: Potion,
     }
 }
-#[derive(Debug, Clone,PartialEq)]
+#[derive(Debug, Clone,PartialEq,Serialize,Deserialize)]
 pub enum Reward{
     None,
     Item{
@@ -33,7 +33,7 @@ pub enum Reward{
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Serialize,Deserialize)]
 pub struct Enemy {
     
     pub name: String, // cool ass name

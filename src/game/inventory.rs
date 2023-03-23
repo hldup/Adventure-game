@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
 use rand::Rng;
+use serde::{Serialize, Deserialize};
 
 use super::{items::{Potion, Armour, Sword}, enemy::{RewardType, Reward}};
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Serialize,Deserialize)]
 
 pub struct Inventory{
     pub potions: HashMap<i128, Potion>,
